@@ -17,46 +17,55 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use crate::direction::Direction;
 use crate::engine::engine_config::Algorithm;
 use crate::engine::engine_config::EngineConfig;
 use crate::engine::moves::Move;
 use crate::engine::node::Node;
 use crate::game::Game;
+use std::mem::replace;
+use std::mem::take;
 
 pub struct Engine {
     pub(super) root: Node,
     pub(super) config: EngineConfig,
 }
 
-#[derive(Default)]
-pub(super) struct Statistics {
-    pub(super) total_nodes: u32,
-    pub(super) cut_nodes: u32,
-}
-
 impl Engine {
     pub fn from_game(game: &Game, config: EngineConfig) -> Engine {
         Engine {
-            root: Node::with_board(game.board, Move::Random(0, 0)),
+            root: Node::with_board(game.board, Move::default()),
             config,
         }
     }
 
-    pub fn best_move(&mut self) -> Move {
-        let stat = Statistics::default();
+    pub fn best_move(&mut self) -> Direction {
         let best_move = match self.config.algorithm {
             Algorithm::Minimax => self.root.minimax(&self.config, self.config.depth, true),
             Algorithm::Negamax => self.root.negamax(&self.config, self.config.depth, 1),
             _ => unimplemented!(),
         };
 
-        println!("{:?}", std::mem::size_of::<[[u8; 4]; 4]>());
-
         //best_turn
         if let Some(ref mut vec) = self.root.children {
-            let next_move = std::mem::take(&mut vec[best_move.local_id as usize]);
-            std::mem::replace(&mut self.root, next_move);
+            let next_move = take(&mut vec[best_move.local_id as usize]);
+            /*if self.root.board.board == next_move.board.board {
+                println!("wrong");
+            }*/
+            //println!("{:?}", next_move.board);
+            replace(&mut self.root, next_move);
         }
-        best_move.turn
+
+        //TODO
+        if let Move::Human(dir) = best_move.turn {
+            dir
+        } else {
+            println!("{:?}", self.root);
+            panic!("This is terninal position")
+        }
+    }
+
+    pub fn make_random_move(&mut self, random_move: Move) {
+        self.root = self.root.find_next_random_move(random_move);
     }
 }

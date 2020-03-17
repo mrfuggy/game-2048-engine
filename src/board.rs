@@ -42,23 +42,6 @@ impl Default for State {
     }
 }
 
-///Next random board
-struct NextRandomIterator {
-    board: Board,
-    position: u8,
-}
-
-impl NextRandomIterator {
-    fn new(board: Board) -> NextRandomIterator {
-        NextRandomIterator { board, position: 0 }
-    }
-}
-
-impl Iterator for NextRandomIterator {
-    type Item = Board;
-    fn next(&mut self) -> Option<Self::Item> {}
-}
-
 impl Board {
     /// Create Empty Board
     pub fn new() -> Board {
@@ -83,6 +66,10 @@ impl Board {
             }
         }
 
+        // extra check when closing zeros
+        if moved {
+            self.move_count += 1;
+        }
         moved
     }
 
@@ -200,6 +187,7 @@ impl Board {
                 }
             }
         }
+        self.move_count += 1;
     }
 
     /// Count the number of empty cells

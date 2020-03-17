@@ -31,15 +31,29 @@ fn main() {
     let mut game = Game::start_new();
     let engine_config = EngineConfig {
         depth: 5,
-        eval_fn: EvaluationFunction::MaxCell,
+        eval_fn: EvaluationFunction::MaxScore,
         algorithm: Algorithm::Negamax,
         random_mode: RandomCompleteness::Full,
     };
     let mut engine = Engine::from_game(&game, engine_config);
-    let best_move = engine.best_move();
-    println!("{}", game);
-    if let Move::Human(human_move) = best_move {
-        println!("{:?}", human_move);
+    loop {
+        println!("start {}", game);
+        let best_move = engine.best_move();
+        let move_made = game.human_move(best_move);
+        println!("move {:?} {}", best_move, game);
+        if move_made {
+            if let Some((i, v)) = game.random_move() {
+                engine.make_random_move(Move::Random(i, v));
+                if game.board.state == State::Lose {
+                    println!("start {}", game);
+                    println!("You lost. Score: {}", game.board.score);
+                    break;
+                }
+            }
+        } else {
+            //println!("{:?}", engine.root.board);
+            panic!("wrong move");
+        }
     }
 }
 

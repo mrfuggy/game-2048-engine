@@ -24,12 +24,14 @@ use crate::engine::engine_config::{EngineConfig, RandomCompleteness};
 use crate::engine::evaluation;
 use crate::engine::moves::BestMove;
 use crate::engine::moves::Move;
+use crate::engine::moves::Statistics;
+use std::mem::take;
 
 const BOARD_SIZE: usize = 4;
 
 #[derive(Debug, Default)]
-pub(crate) struct Node {
-    pub(crate) board: Board,
+pub(super) struct Node {
+    pub(super) board: Board,
     turn: Move,
     value: i32,
     pub(super) children: Option<Vec<Node>>,
@@ -52,28 +54,47 @@ impl Node {
         }
     }
 
-    fn to_leaf(&self) -> BestMove {
+    fn as_terminal_leaf(&self) -> BestMove {
         BestMove {
             turn: self.turn,
             local_id: 0,
             score: self.value,
+            stat: Statistics::default(),
         }
     }
 
-    fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Vec<Node> {
+    /// Use existing tree
+    pub(super) fn find_next_random_move(&mut self, random_move: Move) -> Node {
+        if let Some(ref mut vec) = self.children {
+            //TODO use map
+            for node in vec {
+                if node.turn == random_move {
+                    let next_move = take(node);
+                    return next_move;
+                }
+            }
+        }
+
+        //otherwise if not found, create new tree
+        self.board.move_count += 1;
+        return Node::with_board(self.board, random_move);
+    }
+
+    fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Option<Vec<Node>> {
         if self.children.is_none() {
             let nodes = if self.turn.is_human() {
                 self.next_random_moves(config)
             } else {
                 self.next_human_moves()
             };
-            self.children = Some(nodes);
+            if !nodes.is_empty() {
+                self.children = Some(nodes);
+            } else {
+                self.children = None;
+            }
         }
 
-        match self.children {
-            Some(ref mut vec) => vec,
-            _ => unreachable!(),
-        }
+        &mut self.children
     }
 
     fn next_human_moves(&self) -> Vec<Node> {
@@ -124,7 +145,8 @@ impl Node {
                 if self.board.board[j][i] == 0 {
                     let mut new_board = self.board;
                     new_board.board[j][i] = value;
-                    let node = Node::with_board(new_board, Move::Random(c, value));
+                    new_board.move_count += 1;
+                    let node = Node::with_board(new_board, Move::Random(value, c));
                     nodes.push(node);
                     c += 1;
                 }
@@ -140,7 +162,8 @@ impl Node {
                 if self.board.board[j][i] == 0 {
                     let mut new_board = self.board;
                     new_board.board[j][i] = value;
-                    let node = Node::with_board(new_board, Move::Random(c, value));
+                    new_board.move_count += 1;
+                    let node = Node::with_board(new_board, Move::Random(value, c));
                     nodes.push(node);
                     c += 1;
                     if c >= limit {
@@ -162,80 +185,87 @@ impl Node {
     ) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             self.value = evaluation::evaluate(config.eval_fn, self);
-            return self.to_leaf();
+            return self.as_terminal_leaf();
         }
 
         if max_player {
             let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(-1000);
+            let mut value = BestMove::new(-1000000);
 
-            for (index, node) in nodes.iter_mut().enumerate() {
-                let best_move = node.minimax(config, depth - 1, false);
-                value = max_score_move(best_move, &value, &node, index);
+            if let Some(ref mut vec) = nodes {
+                for (index, node) in vec.iter_mut().enumerate() {
+                    let best_move = node.minimax(config, depth - 1, false);
+                    max_score_move(best_move, &mut value, &node, index);
+                }
+                self.value = value.score;
+                value
+            } else {
+                self.value = evaluation::evaluate(config.eval_fn, self);
+                return self.as_terminal_leaf();
             }
-            self.value = value.score;
-            value
         } else {
             let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(1000);
+            let mut value = BestMove::new(1000000);
 
-            for (index, node) in nodes.iter_mut().enumerate() {
-                let best_move = node.minimax(config, depth - 1, true);
-                value = min_score_move(best_move, &value, &node, index);
+            if let Some(ref mut vec) = nodes {
+                for (index, node) in vec.iter_mut().enumerate() {
+                    let best_move = node.minimax(config, depth - 1, true);
+                    min_score_move(best_move, &mut value, &node, index);
+                }
+                self.value = value.score;
+                value
+            } else {
+                self.value = evaluation::evaluate(config.eval_fn, self);
+                return self.as_terminal_leaf();
             }
-            self.value = value.score;
-            value
         }
     }
 
     pub(super) fn negamax(&mut self, config: &EngineConfig, depth: u16, color: i8) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             self.value = color as i32 * evaluation::evaluate(config.eval_fn, self);
-            return self.to_leaf();
+            return self.as_terminal_leaf();
         }
 
         let nodes = self.gen_next_nodes(config);
-        let mut value = BestMove::new(-1000);
+        let mut value = BestMove::new(-1000000);
 
-        for (index, node) in nodes.iter_mut().enumerate() {
-            let best_move = -node.negamax(config, depth - 1, -color);
-            value = max_score_move(best_move, &value, &node, index);
+        if let Some(ref mut vec) = nodes {
+            for (index, node) in vec.iter_mut().enumerate() {
+                let best_move = -node.negamax(config, depth - 1, -color);
+                max_score_move(best_move, &mut value, &node, index);
+            }
+            self.value = value.score;
+            value
+        } else {
+            self.value = evaluation::evaluate(config.eval_fn, self);
+            return self.as_terminal_leaf();
         }
-        self.value = value.score;
-        value
     }
 }
 
-fn max_score_move(
-    best_move: BestMove,
-    current_value: &BestMove,
-    node: &Node,
-    index: usize,
-) -> BestMove {
+fn max_score_move(best_move: BestMove, current_value: &mut BestMove, node: &Node, index: usize) {
     if best_move.score > current_value.score {
-        BestMove {
+        *current_value = BestMove {
             turn: node.turn,
             local_id: index as u8,
             score: best_move.score,
+            stat: current_value.stat + best_move.stat,
         }
     } else {
-        *current_value
+        current_value.stat = current_value.stat + best_move.stat;
     }
 }
 
-fn min_score_move(
-    best_move: BestMove,
-    current_value: &BestMove,
-    node: &Node,
-    index: usize,
-) -> BestMove {
+fn min_score_move(best_move: BestMove, current_value: &mut BestMove, node: &Node, index: usize) {
     if best_move.score < current_value.score {
-        BestMove {
+        *current_value = BestMove {
             turn: node.turn,
             local_id: index as u8,
             score: best_move.score,
+            stat: best_move.stat,
         }
     } else {
-        *current_value
+        current_value.stat = current_value.stat + best_move.stat;
     }
 }

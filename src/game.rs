@@ -20,7 +20,6 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 use crate::board;
 use crate::board::{Board, State};
 use crate::direction::Direction;
-use crate::engine::node::Node;
 use crate::random;
 use crate::random::{Rnd, RndMove};
 
@@ -44,6 +43,7 @@ impl Game {
 
         let next_move = start_position.rnd.next_move(CELL_COUNT - 1);
         start_position.board.set_move(next_move);
+        start_position.board.move_count = 0;
         start_position
     }
 
@@ -69,12 +69,6 @@ impl Game {
         }
 
         let moved = self.board.slide_to(dir);
-
-        // extra check when closing zeros
-        if moved {
-            self.board.move_count += 1;
-            return moved;
-        }
 
         moved
     }
@@ -309,6 +303,20 @@ mod tests {
             [2, 1, 2, 1],
             [1, 2, 1, 2],
             [2, 3, 1, 3]];
+
+        let moved = game.human_move(Direction::Down);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_down_with_merge2() { //TODO
+        let mut game = Game::start_new();
+        game.board.board =
+           [[3, 4, 2, 1],
+            [3, 6, 4, 3],
+            [4, 8, 6, 4],
+            [1, 3, 7, 1]];
 
         let moved = game.human_move(Direction::Down);
         assert!(moved);

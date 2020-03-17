@@ -21,7 +21,7 @@ use super::board::BOARD_SIZE;
 use std::iter::Rev;
 use std::ops::Range;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Direction {
     Right,
     Down,

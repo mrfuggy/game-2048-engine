@@ -18,10 +18,10 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 use crate::direction::Direction;
-use std::cmp::Ordering;
+use std::ops::Add;
 use std::ops::Neg;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Move {
     Human(Direction),
     Random(u8, u8),
@@ -34,10 +34,22 @@ impl Move {
             Move::Random(_, _) => false,
         }
     }
-    pub(super) fn is_random(&self) -> bool {
-        !self.is_human()
-    }
 }
+
+/*impl PartialEq for Move {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Move::Human(l_dir) => match other {
+                Move::Human(r_dir) => l_dir == r_dir,
+                _ => false,
+            },
+            Move::Random(l_index, l_value) => match other {
+                Move::Random(r_index, r_value) => l_index == r_index & l_value == r_value,
+                _ => false,
+            }
+        }
+    }
+}*/
 
 impl Default for Move {
     fn default() -> Move {
@@ -45,11 +57,12 @@ impl Default for Move {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct BestMove {
     pub turn: Move,
     pub(super) local_id: u8,
     pub(super) score: i32,
+    pub(super) stat: Statistics,
 }
 
 impl BestMove {
@@ -59,43 +72,33 @@ impl BestMove {
             turn: EMPTY,
             local_id: 0,
             score,
-        }
-    }
-
-    fn with_local_id(self, local_id: u8) -> BestMove {
-        BestMove {
-            local_id: local_id,
-            ..self
+            stat: Statistics::default(),
         }
     }
 }
-
-/*impl Ord for BestMove {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.score.cmp(&other.score)
-    }
-}
-
-impl PartialOrd for BestMove {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Eq for BestMove {}
-
-impl PartialEq for BestMove {
-    fn eq(&self, other: &Self) -> bool {
-        self.score == other.score
-    }
-}*/
 
 impl Neg for BestMove {
-    type Output = BestMove;
+    type Output = Self;
     fn neg(self) -> Self::Output {
         BestMove {
             score: -self.score,
             ..self
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(super) struct Statistics {
+    pub(super) total_nodes: u32,
+    pub(super) cut_nodes: u32,
+}
+
+impl Add for Statistics {
+    type Output = Self;
+    fn add(self, other: Self) -> Self::Output {
+        Statistics {
+            total_nodes: self.total_nodes + other.total_nodes,
+            cut_nodes: self.cut_nodes + other.cut_nodes,
         }
     }
 }

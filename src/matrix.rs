@@ -19,7 +19,17 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::game::BOARD_SIZE;
 
-fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
+pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
+    let mut c = 0u8;
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
+            c += (m[j][i] == 0) as u8;
+        }
+    }
+    c
+}
+
+pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE {
         for i in 0..BOARD_SIZE {
             if i > j {
@@ -31,7 +41,7 @@ fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     }
 }
 
-fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
+pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE / 2 {
         let tmp = m[j];
         m[j] = m[BOARD_SIZE - 1 - j];
@@ -47,11 +57,13 @@ mod tests {
     fn transpose_test() {
         let mut actual = [[0u8; BOARD_SIZE]; BOARD_SIZE];
         actual[0][1] = 1;
+        actual[2][3] = 2;
 
         transpose(&mut actual);
 
         let mut excepted = [[0u8; BOARD_SIZE]; BOARD_SIZE];
         excepted[1][0] = 1;
+        excepted[3][2] = 2;
         assert_eq!(actual, excepted);
     }
 

@@ -17,33 +17,35 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+mod direction;
 mod game;
 mod matrix;
 mod random;
 
-use game::{Direction, Game};
+use direction::Direction;
+use game::Game;
 
 fn main() {
     let mut game = Game::start_new();
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
-    game.make_move(Direction::Left);
+    game.make_move(Direction::Down);
     println!("{}", game);
 }

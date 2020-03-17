@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use super::direction::Direction;
+use super::matrix;
 use super::random::{Rnd, RndMove};
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -32,25 +34,6 @@ pub struct Game {
 
 pub const BOARD_SIZE: usize = 4;
 const CELL_COUNT: u8 = (BOARD_SIZE as u8) * (BOARD_SIZE as u8);
-
-#[derive(Copy, Clone)]
-pub enum Direction {
-    Right,
-    Down,
-    Left,
-    Up,
-}
-
-impl Direction {
-    fn get_mask(&self) -> (usize, usize) {
-        match self {
-            Direction::Right => (0usize, 1usize),
-            Direction::Left => (0usize, 1usize),
-            Direction::Up => (1usize, 0usize),
-            Direction::Down => (1usize, 0usize),
-        }
-    }
-}
 
 #[derive(Debug, PartialEq)]
 pub enum State {
@@ -90,6 +73,40 @@ impl fmt::Display for Game {
             writeln!(f)?
         }
         write!(f, "")
+    }
+}
+
+fn _slide_array(board: &mut [u8; BOARD_SIZE], score: &mut u32) {
+    for i in 0..BOARD_SIZE - 1 {
+        //move next non zero to current
+        if board[i] == 0 {
+            //from current to end of line
+            for k in i + 1..BOARD_SIZE {
+                if board[k] != 0 {
+                    board[i] = board[k];
+                    board[k] = 0;
+                    break;
+                }
+            }
+        }
+
+        //return if rest are zeros
+        if board[i] == 0 {
+            break;
+        }
+
+        for k in i + 1..BOARD_SIZE {
+            if board[i] == board[k] {
+                board[i] += 1;
+                board[k] = 0;
+                //add score
+                *score += 2 << board[i] - 1;
+                //one merge per cell
+                break;
+            } else if board[k] != 0 {
+                break;
+            }
+        }
     }
 }
 
@@ -143,7 +160,84 @@ impl Game {
         return true;
     }
 
-    fn slide_to(&mut self, _dir: Direction) {
+    fn slide_to(&mut self, dir: Direction) {
+        for j in dir.get_range_j() {
+            for i in dir.get_range_i() {
+                if dir.is_horizontal() {
+                    self.slide_h(dir, j, i);
+                } else {
+                    self.slide_v(dir, j, i);
+                }
+            }
+        }
+    }
+
+    fn slide_h(&mut self, dir: Direction, j: usize, i: usize) {
+        //move next non zero to current
+        if self.board[j][i] == 0 {
+            //from current to end of line
+            for k in dir.get_range_k(i) {
+                if self.board[j][k] != 0 {
+                    self.board[j][i] = self.board[j][k];
+                    self.board[j][k] = 0;
+                    break;
+                }
+            }
+        }
+
+        //return if rest are zeros
+        if self.board[j][i] == 0 {
+            return;
+        }
+
+        for k in dir.get_range_k(i) {
+            if self.board[j][i] == self.board[j][k] {
+                self.board[j][i] += 1;
+                self.board[j][k] = 0;
+                //add score
+                self.score += 2 << self.board[j][i] - 1;
+                //one merge per cell
+                break;
+            } else if self.board[j][k] != 0 {
+                break;
+            }
+        }
+    }
+
+    fn slide_v(&mut self, dir: Direction, j: usize, i: usize) {
+        //move next non zero to current
+        if self.board[j][i] == 0 {
+            //from current to end of line
+            for k in dir.get_range_k(j) {
+                if self.board[k][i] != 0 {
+                    self.board[j][i] = self.board[k][i];
+                    self.board[k][i] = 0;
+                    break;
+                }
+            }
+        }
+
+        //return if rest are zeros
+        if self.board[j][i] == 0 {
+            return;
+        }
+
+        for k in dir.get_range_k(j) {
+            if self.board[j][i] == self.board[k][i] {
+                self.board[j][i] += 1;
+                self.board[k][i] = 0;
+                //add score
+                self.score += 2 << self.board[j][i] - 1;
+                //one merge per cell
+                break;
+            } else if self.board[k][i] != 0 {
+                break;
+            }
+        }
+    }
+
+    //baseline
+    fn slide_to_left(&mut self, _dir: Direction) {
         for j in 0..BOARD_SIZE {
             for i in 0..BOARD_SIZE - 1 {
                 //move next non zero to current
@@ -198,7 +292,7 @@ impl Game {
         false
     }
 
-    fn random_move(&mut self) {
+    pub fn random_move(&mut self) {
         if self.state == State::Lose {
             return;
         }
@@ -230,12 +324,6 @@ impl Game {
     }
 
     fn empty_count(&self) -> u8 {
-        let mut c = 0u8;
-        for j in 0..BOARD_SIZE {
-            for i in 0..BOARD_SIZE {
-                c += (self.board[j][i] == 0) as u8;
-            }
-        }
-        c
+        matrix::empty_count(&self.board)
     }
 }

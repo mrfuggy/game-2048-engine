@@ -25,14 +25,15 @@ use crate::engine::evaluation;
 use crate::game::Game;
 use std::cmp::max;
 use std::cmp::min;
+use std::cmp::Ordering;
 
 const BOARD_SIZE: usize = 4;
 
 pub(crate) struct Node {
     pub(crate) board: Board,
     turn: Move,
-    value: i32,
-    childred: Option<Box<Vec<Node>>>,
+    value: BestMove,
+    childred: Option<Vec<Node>>,
 }
 
 /*#[derive(PartialEq)]
@@ -69,6 +70,36 @@ impl Move {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct BestMove(Move, i32);
+
+impl BestMove {
+    fn new(score: i32) -> BestMove {
+        const EMPTY: Move = Move::Random(0, 0);
+        BestMove(EMPTY, score)
+    }
+}
+
+impl Ord for BestMove {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.1.cmp(&other.1)
+    }
+}
+
+impl PartialOrd for BestMove {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for BestMove {}
+
+impl PartialEq for BestMove {
+    fn eq(&self, other: &Self) -> bool {
+        self.1 == other.1
+    }
+}
+
 /*fn get_node(node: &Node, local_id: u8) -> &Node {
     match &node.childred {
         None => node,
@@ -88,28 +119,28 @@ impl Node {
         Node {
             board: game.board,
             turn: game_move,
-            value: 0,
+            value: BestMove::new(0),
             childred: None,
         }
     }
 
-    fn from_next_random(&self, new_board: Board, game_move: Move) -> Node {
+    fn with_board(new_board: Board, game_move: Move) -> Node {
         Node {
             board: new_board,
             turn: game_move,
-            value: 0,
+            value: BestMove::new(0),
             childred: None,
         }
     }
 
-    fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Box<Vec<Node>> {
+    fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Vec<Node> {
         if self.childred.is_none() {
             let nodes = if self.turn.is_human() {
                 self.next_human_moves()
             } else {
                 self.next_random_moves()
             };
-            self.childred = Some(Box::new(nodes));
+            self.childred = Some(nodes);
         }
 
         match self.childred {
@@ -145,9 +176,9 @@ impl Node {
         for j in 0..BOARD_SIZE {
             for i in 0..BOARD_SIZE {
                 if self.board.board[j][i] == 0 {
-                    let mut new_board = self.board.clone();
+                    let mut new_board = self.board;
                     new_board.board[j][i] = value;
-                    let node = self.from_next_random(new_board, Move::Random(c, 1));
+                    let node = Node::with_board(new_board, Move::Random(c, 1));
                     nodes.push(node);
                     c += 1;
                 }
@@ -157,16 +188,21 @@ impl Node {
 }
 
 //algorithms
-//impl Engine {
 impl Node {
-    pub(super) fn minimax(&mut self, config: &EngineConfig, depth: u16, max_player: bool) -> i32 {
+    pub(super) fn minimax(
+        &mut self,
+        config: &EngineConfig,
+        depth: u16,
+        max_player: bool,
+    ) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
-            self.value = evaluation::evaluate(config.eval_fn, self);
-            return self.value; //(node.turn, node.score);
+            let score = evaluation::evaluate(config.eval_fn, self);
+            self.value = BestMove(self.turn, score);
+            return self.value;
         }
 
         if max_player {
-            let mut value = -1;
+            let mut value = BestMove::new(-1);
             let nodes = self.gen_next_nodes(config);
             for node in nodes.iter_mut() {
                 value = max(value, node.minimax(config, depth - 1, false));
@@ -174,7 +210,7 @@ impl Node {
             self.value = value;
             self.value
         } else {
-            let mut value = 1;
+            let mut value = BestMove::new(1);
             let nodes = self.gen_next_nodes(config);
             for node in nodes.iter_mut() {
                 value = min(value, node.minimax(config, depth - 1, true));
@@ -182,6 +218,5 @@ impl Node {
             self.value = value;
             self.value
         }
-        //(Move::Human(Direction::Left), 0)
     }
 }

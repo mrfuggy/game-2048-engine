@@ -18,21 +18,32 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 mod game;
+mod matrix;
 mod random;
 
 use game::{Direction, Game};
 
 fn main() {
     let mut game = Game::start_new();
-    println!("{:?}", game);
-    game.make_move(Direction::Up);
-    println!("{:?}", game);
-    game.make_move(Direction::Right);
-    println!("{:?}", game);
-    game.make_move(Direction::Down);
-    println!("{:?}", game);
-    game.make_move(Direction::Down);
-    println!("{:?}", game);
-    game.make_move(Direction::Down);
-    println!("{:?}", game);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
+    game.make_move(Direction::Left);
+    println!("{}", game);
 }

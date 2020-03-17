@@ -51,22 +51,33 @@ impl Rnd {
     pub(super) fn next(&mut self) -> u32 {
         let next = (self.seed * MULTIPLIER + INCREMENT) % MODULUS;
         self.seed = next;
-        return next;
+        next
     }
 }
 
 impl RndMove for Rnd {
     fn next_move(&mut self, empty_count: u8) -> (u8, u8) {
         let next = self.next();
-        let value: u8;
-
         //10% double value
-        if next > (MODULUS - 1) / 10 {
-            value = 1;
-        } else {
-            value = 2;
-        }
+        let value = if next > (MODULUS - 1) / 10 { 1 } else { 2 };
 
         (value, (next % empty_count as u32) as u8)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn next_move_test() {
+        let mut rnd = Rnd::new();
+        for c in 1..17 {
+            for _ in 0..1000 {
+                let (value, pos) = rnd.next_move(c);
+                assert!(value == 1 || value == 2);
+                assert!(pos < c);
+            }
+        }
     }
 }

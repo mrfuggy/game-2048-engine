@@ -51,6 +51,7 @@ fn evaluation_max_score(node: &Node) -> i32 {
     node.board.score as i32
 }
 
+/// range 0..8
 fn evaluation_monotonicity(node: &Node) -> i32 {
     matrix::monotonicity(&node.board.board)
 }

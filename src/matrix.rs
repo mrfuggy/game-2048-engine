@@ -48,10 +48,23 @@ pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     let mut c = 0;
     //horizontally
     for j in 0..BOARD_SIZE {
-        //let mon = m[j][0] >= m[j][1] +
-        /*for i in 0..BOARD_SIZE - 1 {
-            c += (m[j][i] >= m[j][i + 1]) as i32;
-        }*/
+        let gt = (m[j][0] < m[j][1]) as u8 + (m[j][1] < m[j][2]) as u8 + (m[j][2] < m[j][3]) as u8;
+        let eq =
+            (m[j][0] == m[j][1]) as u8 + (m[j][1] == m[j][2]) as u8 + (m[j][2] == m[j][3]) as u8;
+
+        if gt + eq == 3 || gt + eq == 0 || gt == 0 {
+            c += 1;
+        }
+    }
+    //vertically
+    for i in 0..BOARD_SIZE {
+        let gt = (m[0][i] < m[1][i]) as u8 + (m[1][i] < m[2][i]) as u8 + (m[2][i] < m[3][i]) as u8;
+        let eq =
+            (m[0][i] == m[1][i]) as u8 + (m[1][i] == m[2][i]) as u8 + (m[2][i] == m[3][i]) as u8;
+
+        if gt + eq == 3 || gt + eq == 0 || gt == 0 {
+            c += 1;
+        }
     }
     c
 }
@@ -119,6 +132,70 @@ mod tests {
         let board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
         let actual = monotonicity(&board);
         assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone1_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [0, 0, 1, 1];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone2_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [0, 0, 1, 2];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone3_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [1, 1, 0, 0];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone4_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [2, 1, 0, 0];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone6_test() {
+        let mut board = [[16u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [2, 1, 0, 0];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_monotone7_test() {
+        let mut board = [[16u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [0, 0, 1, 2];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_nonmonotone0_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [0, 0, 1, 0];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 7);
+    }
+
+    #[test]
+    fn smoothness_nonmonotone1_test() {
+        let mut board = [[16u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0] = [0, 0, 1, 0];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 7);
     }
 
     #[test]

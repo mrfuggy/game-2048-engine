@@ -31,7 +31,7 @@ fn main() {
     let mut game = Game::start_new();
     let engine_config = EngineConfig {
         depth: 3,
-        eval_fn: EvaluationFunction::Smoothness,
+        eval_fn: EvaluationFunction::Monotonicity,
         algorithm: Algorithm::Negamax,
         random_mode: RandomCompleteness::MonteCarlo(5),
     };

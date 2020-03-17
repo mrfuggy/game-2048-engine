@@ -17,18 +17,18 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use super::board::BOARD_SIZE;
 use super::game::Game;
-use super::game::BOARD_SIZE;
 use std::fmt;
 
 impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "score: {}", self.score)?;
+        writeln!(f, "score: {}", self.board.score)?;
 
         for j in 0..BOARD_SIZE {
             for i in 0..BOARD_SIZE {
-                let value = if self.board[j][i] != 0 {
-                    1 << self.board[j][i]
+                let value = if self.board.board[j][i] != 0 {
+                    1 << self.board.board[j][i]
                 } else {
                     0
                 };

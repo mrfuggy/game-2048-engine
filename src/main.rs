@@ -19,8 +19,9 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate game_2048_engine;
 
+use game_2048_engine::board::State;
 use game_2048_engine::direction::Direction;
-use game_2048_engine::game::{Game, State};
+use game_2048_engine::game::Game;
 use game_2048_engine::input;
 use std::io;
 
@@ -35,15 +36,15 @@ fn main() {
             .expect("Failed to read line");
 
         if input.len() > 1 {
-            let dir = input::parse_input(&input.chars().nth(0).unwrap());
+            let dir = input::parse_input(input.chars().nth(0).unwrap());
             print!("\r");
-            if dir.is_some() {
-                game.make_move(dir.unwrap());
+            if let Some(value) = dir {
+                game.make_move(value);
             }
         }
 
-        if game.state == State::Lose {
-            println!("You lost. Score: {}", game.score);
+        if game.board.state == State::Lose {
+            println!("You lost. Score: {}", game.board.score);
             break;
         }
     }
@@ -55,33 +56,33 @@ fn simple_strategy() {
     loop {
         let mut all = false;
         all |= game.make_move(Direction::Left);
-        if game.state == State::Lose {
+        if game.board.state == State::Lose {
             break;
         }
         all |= game.make_move(Direction::Down);
-        if game.state == State::Lose {
+        if game.board.state == State::Lose {
             break;
         }
         all |= game.make_move(Direction::Right);
-        if game.state == State::Lose {
+        if game.board.state == State::Lose {
             break;
         }
         all |= game.make_move(Direction::Down);
-        if game.state == State::Lose {
+        if game.board.state == State::Lose {
             break;
         }
         if !all {
             game.make_move(Direction::Up);
-            if game.state == State::Lose {
+            if game.board.state == State::Lose {
                 break;
             }
         }
     }
     println!(
         "You lost. Score: {} Max: {} Moves: {}",
-        game.score,
-        game.max_cell(),
-        game.move_count
+        game.board.score,
+        game.board.max_cell(),
+        game.board.move_count
     );
     //println!("{}", game);
 }

@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use super::game::BOARD_SIZE;
+use super::board::BOARD_SIZE;
 
 /// Max cell value
 pub fn max_cell(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
@@ -59,9 +59,7 @@ pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
 /// Mirror a matrix horizontally
 pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE / 2 {
-        let tmp = m[j];
-        m[j] = m[BOARD_SIZE - 1 - j];
-        m[BOARD_SIZE - 1 - j] = tmp;
+        m.swap(j, BOARD_SIZE - 1 - j);
     }
 }
 

@@ -33,7 +33,7 @@ impl Engine {
     pub fn new_from(game: &Game, config: EngineConfig) -> Engine {
         Engine {
             root: Node::from_game(game, Move::Random(0, 0)),
-            config: config,
+            config,
         }
     }
 

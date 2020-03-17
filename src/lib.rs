@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+pub mod board;
 pub mod direction;
 pub mod engine;
 pub mod game;

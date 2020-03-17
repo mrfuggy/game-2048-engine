@@ -18,7 +18,6 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 use crate::engine::node::Node;
-use crate::matrix;
 
 #[derive(Clone, Copy)]
 pub enum EvaluationFunction {
@@ -40,11 +39,11 @@ pub(super) fn evaluate(eval_fn: EvaluationFunction, node: &Node) -> i32 {
 }
 
 fn evaluation_max_cell(node: &Node) -> i32 {
-    matrix::max_cell(&node.board) as i32
+    node.board.max_cell() as i32
 }
 
 fn evaluation_max_score(node: &Node) -> i32 {
-    node.score as i32
+    node.board.score as i32
 }
 
 fn evaluation_monotonicity(_node: &Node) -> i32 {

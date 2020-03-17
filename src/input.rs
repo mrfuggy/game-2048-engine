@@ -19,7 +19,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::direction::Direction;
 
-pub fn parse_input(ch: &char) -> Option<Direction> {
+pub fn parse_input(ch: char) -> Option<Direction> {
     match ch {
         'w' => Some(Direction::Up),
         'a' => Some(Direction::Left),

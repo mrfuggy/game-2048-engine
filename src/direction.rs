@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use super::game::BOARD_SIZE;
+use super::board::BOARD_SIZE;
 use std::iter::Rev;
 use std::ops::Range;
 
@@ -47,7 +47,7 @@ impl Iterator for RangeOrRev {
 }
 
 impl Direction {
-    pub(super) fn is_horizontal(&self) -> bool {
+    pub(super) fn is_horizontal(self) -> bool {
         match self {
             Direction::Right => true,
             Direction::Left => true,
@@ -56,7 +56,7 @@ impl Direction {
         }
     }
 
-    pub(super) fn get_mask(&self) -> (usize, usize) {
+    pub(super) fn get_mask(self) -> (usize, usize) {
         match self {
             Direction::Right => (1usize, 0usize),
             Direction::Left => (1usize, 0usize),
@@ -75,7 +75,7 @@ impl Direction {
     // Down      = ↑ → ↥
 
     /// Vertical order
-    pub(super) fn get_range_j(&self) -> RangeOrRev {
+    pub(super) fn get_range_j(self) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(0..BOARD_SIZE),
             Direction::Right => RangeOrRev::RORRange(0..BOARD_SIZE),
@@ -85,7 +85,7 @@ impl Direction {
     }
 
     /// Horizontal order
-    pub(super) fn get_range_i(&self) -> RangeOrRev {
+    pub(super) fn get_range_i(self) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(0..BOARD_SIZE - 1),
             Direction::Right => RangeOrRev::RORRev((1..BOARD_SIZE).rev()),
@@ -95,7 +95,7 @@ impl Direction {
     }
 
     /// Search order next value in the current line
-    pub(super) fn get_range_k(&self, current: usize) -> RangeOrRev {
+    pub(super) fn get_range_k(self, current: usize) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(current + 1..BOARD_SIZE),
             Direction::Right => RangeOrRev::RORRev((0..current).rev()),

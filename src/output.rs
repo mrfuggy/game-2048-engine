@@ -1,4 +1,4 @@
-/* input.rs -- input direction from console.
+/* output.rs -- output utils.
 Copyright (C) 2020 fuggy
 
 This file is part of game-2048-engine.
@@ -17,20 +17,25 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use crate::direction::Direction;
+use super::game::Game;
+use super::game::BOARD_SIZE;
+use std::fmt;
 
-pub fn parse_input(ch: &char) -> Option<Direction> {
-    match ch {
-        'w' => Some(Direction::Up),
-        'a' => Some(Direction::Left),
-        's' => Some(Direction::Down),
-        'd' => Some(Direction::Right),
+impl fmt::Display for Game {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "score: {}", self.score)?;
 
-        '↑' => Some(Direction::Up),
-        '←' => Some(Direction::Left),
-        '↓' => Some(Direction::Down),
-        '→' => Some(Direction::Right),
-
-        _ => None,
+        for j in 0..BOARD_SIZE {
+            for i in 0..BOARD_SIZE {
+                let value = if self.board[j][i] != 0 {
+                    1 << self.board[j][i]
+                } else {
+                    0
+                };
+                write!(f, "{:>6}", value)?
+            }
+            writeln!(f)?
+        }
+        write!(f, "")
     }
 }

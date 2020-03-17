@@ -21,16 +21,17 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug)]
+/// Linear congruential generator
 pub(super) struct Rnd {
     pub(super) seed: u32,
 }
 
-// Linear congruential generator
 const MODULUS: u32 = 6075;
 const MULTIPLIER: u32 = 106;
 const INCREMENT: u32 = 1283;
 
 pub(super) trait RndMove {
+    /// returns: (value 1 or 2, position in empty cell)
     fn next_move(&mut self, empty_count: u8) -> (u8, u8);
 }
 
@@ -44,7 +45,7 @@ pub(super) fn get_rnd() -> Rnd {
         SEED.store(rnd.seed, Ordering::Relaxed);
         rnd
     } else {
-        let mut rnd = Rnd::new_with_seed(SEED.load(Ordering::Relaxed));
+        let mut rnd = Rnd::with_seed(SEED.load(Ordering::Relaxed));
         SEED.store(rnd.next(), Ordering::Relaxed);
         rnd
     }
@@ -59,7 +60,7 @@ impl Rnd {
         }
     }
 
-    pub(super) fn new_with_seed(seed: u32) -> Rnd {
+    pub(super) fn with_seed(seed: u32) -> Rnd {
         Rnd {
             seed: seed as u32 % MODULUS,
         }
@@ -78,7 +79,7 @@ impl RndMove for Rnd {
         // 10% double value
         let value = if next > (MODULUS - 1) / 10 { 1 } else { 2 };
 
-        (value, (next % empty_count as u32) as u8)
+        (value, (next & (empty_count as u32 - 1)) as u8)
     }
 }
 
@@ -86,7 +87,7 @@ impl RndMove for Rnd {
 mod tests {
     use super::*;
 
-    fn variance(a: &Vec<i32>) -> f64 {
+    fn stddev(a: &Vec<i32>) -> f64 {
         let mut count = 0;
         let mut sum = 0;
         for i in a {
@@ -127,7 +128,7 @@ mod tests {
             pos_freq[pos as usize] += 1;
             value_freq[value as usize - 1] += 1;
         }
-        println!("{:?} D: {:.3}", pos_freq, variance(&pos_freq.to_vec()));
+        println!("{:?} D: {:.3}", pos_freq, stddev(&pos_freq.to_vec()));
         println!(
             "{:?} R: {:.3}",
             value_freq,

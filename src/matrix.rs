@@ -19,6 +19,19 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::game::BOARD_SIZE;
 
+/// Max cell value
+pub fn max_cell(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
+    let mut c = 0u8;
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
+            if m[j][i] > c {
+                c = m[j][i];
+            }
+        }
+    }
+    c
+}
+
 /// Count the number of empty cells
 pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     let mut c = 0u8;

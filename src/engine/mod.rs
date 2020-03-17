@@ -1,4 +1,4 @@
-/* input.rs -- input direction from console.
+/* mod.rs -- engine module.
 Copyright (C) 2020 fuggy
 
 This file is part of game-2048-engine.
@@ -17,20 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use crate::direction::Direction;
-
-pub fn parse_input(ch: &char) -> Option<Direction> {
-    match ch {
-        'w' => Some(Direction::Up),
-        'a' => Some(Direction::Left),
-        's' => Some(Direction::Down),
-        'd' => Some(Direction::Right),
-
-        '↑' => Some(Direction::Up),
-        '←' => Some(Direction::Left),
-        '↓' => Some(Direction::Down),
-        '→' => Some(Direction::Right),
-
-        _ => None,
-    }
-}
+mod engine;
+mod engine_config;
+mod evaluation;
+pub(super) mod node;

@@ -17,47 +17,27 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use super::direction::Direction;
-use super::matrix;
-use super::random;
-use super::random::{Rnd, RndMove};
-use std::fmt;
+use crate::direction::Direction;
+use crate::engine::node::Node;
+use crate::matrix;
+use crate::random;
+use crate::random::{Rnd, RndMove};
 
-#[derive(Debug)]
 pub struct Game {
-    board: [[u8; BOARD_SIZE]; BOARD_SIZE],
+    pub board: [[u8; BOARD_SIZE]; BOARD_SIZE],
     rnd: Rnd,
     pub state: State,
     pub score: u32,
     pub move_count: u16,
 }
 
-pub const BOARD_SIZE: usize = 4;
+pub(super) const BOARD_SIZE: usize = 4;
 const CELL_COUNT: u8 = (BOARD_SIZE as u8) * (BOARD_SIZE as u8);
 
 #[derive(Debug, PartialEq)]
 pub enum State {
     InGame,
     Lose,
-}
-
-impl fmt::Display for Game {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "score: {}", self.score)?;
-
-        for j in 0..BOARD_SIZE {
-            for i in 0..BOARD_SIZE {
-                let value = if self.board[j][i] != 0 {
-                    2 << self.board[j][i] - 1
-                } else {
-                    0
-                };
-                write!(f, "{:>6}", value)?
-            }
-            writeln!(f)?
-        }
-        write!(f, "")
-    }
 }
 
 impl Game {
@@ -82,16 +62,27 @@ impl Game {
         start_position
     }
 
+    pub(super) fn from_node(node: &Node) -> Game {
+        let mut game = Game {
+            board: node.board,
+            rnd: Rnd::with_seed(0),
+            state: State::InGame,
+            score: node.score,
+            move_count: node.move_count,
+        };
+        if !game.can_move() {
+            game.state = State::Lose;
+        }
+        game
+    }
+
     /// Make human move then random move
-    pub fn make_move(&mut self, dir: Direction) {
+    pub fn make_move(&mut self, dir: Direction) -> bool {
         let move_made = self.human_move(dir);
         if move_made {
             self.random_move();
         }
-
-        if !self.can_move() {
-            self.state = State::Lose;
-        }
+        move_made
     }
 
     /// Make human move
@@ -107,15 +98,14 @@ impl Game {
         }
 
         let moved = self.slide_to(dir);
+
         // extra check when closing zeros
         if moved {
             self.move_count += 1;
             return moved;
         }
 
-        //TODO
         return moved;
-        //return true;
     }
 
     /// Slide board to specific side
@@ -137,6 +127,7 @@ impl Game {
     /// Slide line horizontally in current point
     fn slide_h(&mut self, dir: Direction, j: usize, i: usize) -> bool {
         let mut moved = false;
+
         // move next non zero to current
         if self.board[j][i] == 0 {
             // from current to end of line
@@ -161,7 +152,7 @@ impl Game {
                 self.board[j][k] = 0;
                 moved = true;
                 // add score
-                self.score += 2 << self.board[j][i] - 1;
+                self.score += 1 << self.board[j][i];
                 // one merge per cell
                 break;
             } else if self.board[j][k] != 0 {
@@ -175,6 +166,7 @@ impl Game {
     /// Slide line vertically in current point
     fn slide_v(&mut self, dir: Direction, j: usize, i: usize) -> bool {
         let mut moved = false;
+
         // move next non zero to current
         if self.board[j][i] == 0 {
             // from current to end of line
@@ -199,7 +191,7 @@ impl Game {
                 self.board[k][i] = 0;
                 moved = true;
                 // add score
-                self.score += 2 << self.board[j][i] - 1;
+                self.score += 1 << self.board[j][i];
                 // one merge per cell
                 break;
             } else if self.board[k][i] != 0 {
@@ -240,6 +232,11 @@ impl Game {
         let empty_count = self.empty_count();
         let next_move = self.rnd.next_move(empty_count);
         self.set_move(next_move);
+
+        if !self.can_move() {
+            self.state = State::Lose;
+        }
+
         Some(next_move)
     }
 
@@ -261,7 +258,220 @@ impl Game {
     }
 
     /// Count the number of empty cells
-    fn empty_count(&self) -> u8 {
+    pub fn empty_count(&self) -> u8 {
         matrix::empty_count(&self.board)
+    }
+
+    /// Count the number of empty cells
+    pub fn max_cell(&self) -> u16 {
+        1 << matrix::max_cell(&self.board)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_can_play() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 1],
+            [1, 0, 1, 2],
+            [2, 1, 2, 1]];
+
+        assert!(game.can_move());
+
+        let mut game = Game::start_new();
+        game.board =
+           [[3, 2, 1, 1],
+            [1, 1, 2, 2],
+            [3, 2, 1, 1],
+            [2, 1, 2, 1]];
+
+        assert!(game.can_move());
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_lose_game() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        assert!(!game.can_move());
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_left_with_zero_start() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [0, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Left);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_left_with_zero_end() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 0],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Left);
+        assert!(!moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_left_with_merge() {
+        let mut game = Game::start_new();
+        game.board =
+           [[3, 2, 1, 1],
+            [1, 1, 2, 2],
+            [3, 2, 1, 1],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Left);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_right_with_zero_start() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 0],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Right);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_right_with_zero_end() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [0, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Right);
+        assert!(!moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_right_with_merge() {
+        let mut game = Game::start_new();
+        game.board =
+           [[3, 2, 1, 1],
+            [1, 1, 2, 2],
+            [3, 2, 1, 1],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Right);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_up_with_zero_start() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 0, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Up);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_up_with_zero_end() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 0, 1]];
+
+        let moved = game.human_move(Direction::Up);
+        assert!(!moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_up_with_merge() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 3, 2, 3],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Up);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_down_with_zero_start() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 0, 1]];
+
+        let moved = game.human_move(Direction::Down);
+        assert!(moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_down_with_zero_end() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 0, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 1, 2, 1]];
+
+        let moved = game.human_move(Direction::Down);
+        assert!(!moved);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn should_slide_down_with_merge() {
+        let mut game = Game::start_new();
+        game.board =
+           [[1, 2, 1, 2],
+            [2, 1, 2, 1],
+            [1, 2, 1, 2],
+            [2, 3, 1, 3]];
+
+        let moved = game.human_move(Direction::Down);
+        assert!(moved);
     }
 }

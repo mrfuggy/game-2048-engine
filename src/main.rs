@@ -17,14 +17,11 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-mod direction;
-mod game;
-mod input;
-mod matrix;
-mod random;
+extern crate game_2048_engine;
 
-use direction::Direction;
-use game::{Game, State};
+use game_2048_engine::direction::Direction;
+use game_2048_engine::game::{Game, State};
+use game_2048_engine::input;
 use std::io;
 
 fn main() {
@@ -46,8 +43,45 @@ fn main() {
         }
 
         if game.state == State::Lose {
-            println!("You lost. Score:{}", game.score);
+            println!("You lost. Score: {}", game.score);
             break;
         }
     }
+}
+
+fn simple_strategy() {
+    let mut game = Game::start_new();
+
+    loop {
+        let mut all = false;
+        all |= game.make_move(Direction::Left);
+        if game.state == State::Lose {
+            break;
+        }
+        all |= game.make_move(Direction::Down);
+        if game.state == State::Lose {
+            break;
+        }
+        all |= game.make_move(Direction::Right);
+        if game.state == State::Lose {
+            break;
+        }
+        all |= game.make_move(Direction::Down);
+        if game.state == State::Lose {
+            break;
+        }
+        if !all {
+            game.make_move(Direction::Up);
+            if game.state == State::Lose {
+                break;
+            }
+        }
+    }
+    println!(
+        "You lost. Score: {} Max: {} Moves: {}",
+        game.score,
+        game.max_cell(),
+        game.move_count
+    );
+    //println!("{}", game);
 }

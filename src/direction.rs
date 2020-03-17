@@ -29,6 +29,7 @@ pub enum Direction {
     Up,
 }
 
+/// Range/Rev wrapper
 pub(super) enum RangeOrRev {
     RORRange(Range<usize>),
     RORRev(Rev<Range<usize>>),

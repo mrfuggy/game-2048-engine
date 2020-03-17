@@ -1,4 +1,4 @@
-/* input.rs -- input direction from console.
+/* engine_config.rs -- engine configuration parameters.
 Copyright (C) 2020 fuggy
 
 This file is part of game-2048-engine.
@@ -17,20 +17,26 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use crate::direction::Direction;
+use crate::engine::evaluation::EvaluationFunction;
 
-pub fn parse_input(ch: &char) -> Option<Direction> {
-    match ch {
-        'w' => Some(Direction::Up),
-        'a' => Some(Direction::Left),
-        's' => Some(Direction::Down),
-        'd' => Some(Direction::Right),
+pub struct EngineConfig {
+    pub depth: u16,
+    pub eval_fn: EvaluationFunction,
+    pub algorithm: Algorithm,
+    pub random_mode: RandomCompleteness,
+}
 
-        '↑' => Some(Direction::Up),
-        '←' => Some(Direction::Left),
-        '↓' => Some(Direction::Down),
-        '→' => Some(Direction::Right),
+pub enum RandomCompleteness {
+    Full,
+    Ordered(u8),
+    MonteCarlo(u8),
+}
 
-        _ => None,
-    }
+pub enum Algorithm {
+    Minimax,
+    MinimaxAlphaBeta,
+    Negamax,
+    NegamaxAlphaBeta,
+    NegaScout,
+    ExpectiMinimax,
 }

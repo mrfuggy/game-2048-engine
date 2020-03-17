@@ -43,6 +43,37 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     c
 }
 
+/// Sum of absolute value of the difference between pairs
+pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+    let mut c = 0;
+    //horizontally
+    for j in 0..BOARD_SIZE {
+        //let mon = m[j][0] >= m[j][1] +
+        /*for i in 0..BOARD_SIZE - 1 {
+            c += (m[j][i] >= m[j][i + 1]) as i32;
+        }*/
+    }
+    c
+}
+
+/// Sum of absolute value of the difference between pairs
+pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+    let mut c = 0i32;
+    //horizontally
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE - 1 {
+            c += (m[j][i] as i32 - m[j][i + 1] as i32).abs();
+        }
+    }
+    //vertically
+    for j in 0..BOARD_SIZE - 1 {
+        for i in 0..BOARD_SIZE {
+            c += (m[j][i] as i32 - m[j + 1][i] as i32).abs();
+        }
+    }
+    c
+}
+
 #[allow(dead_code)]
 /// Transpose the matrix
 pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
@@ -81,6 +112,41 @@ mod tests {
         excepted[1][0] = 1;
         excepted[3][2] = 2;
         assert_eq!(actual, excepted);
+    }
+
+    #[test]
+    fn smoothness_monotone0_test() {
+        let board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        let actual = monotonicity(&board);
+        assert_eq!(actual, 8);
+    }
+
+    #[test]
+    fn smoothness_smooth0_test() {
+        let board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        let actual = smoothness(&board);
+        assert_eq!(actual, 0);
+    }
+
+    #[test]
+    fn smoothness_smooth16_test() {
+        let board = [[16u8; BOARD_SIZE]; BOARD_SIZE];
+        let actual = smoothness(&board);
+        assert_eq!(actual, 0);
+    }
+
+    #[test]
+    fn smoothness_unsmooth_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        for j in 0..BOARD_SIZE {
+            for i in 0..BOARD_SIZE {
+                if j + i & 1 == 1 {
+                    board[j][i] = 16;
+                }
+            }
+        }
+        let actual = smoothness(&board);
+        assert_eq!(actual, 384);
     }
 
     #[test]

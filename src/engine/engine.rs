@@ -42,17 +42,16 @@ impl Engine {
     pub fn best_move(&mut self) -> Direction {
         let best_move = match self.config.algorithm {
             Algorithm::Minimax => self.root.minimax(&self.config, self.config.depth, true),
+            Algorithm::MinimaxAlphaBeta => unimplemented!(),
             Algorithm::Negamax => self.root.negamax(&self.config, self.config.depth, 1),
-            _ => unimplemented!(),
+            Algorithm::NegamaxAlphaBeta => unimplemented!(),
+            Algorithm::NegaScout => unimplemented!(),
+            Algorithm::ExpectiMinimax => unimplemented!(),
         };
 
         //best_turn
         if let Some(ref mut vec) = self.root.children {
             let next_move = take(&mut vec[best_move.local_id as usize]);
-            /*if self.root.board.board == next_move.board.board {
-                println!("wrong");
-            }*/
-            //println!("{:?}", next_move.board);
             replace(&mut self.root, next_move);
         }
 

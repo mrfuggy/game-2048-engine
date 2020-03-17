@@ -18,6 +18,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 use crate::engine::node::Node;
+use crate::matrix;
 
 #[derive(Clone, Copy)]
 pub enum EvaluationFunction {
@@ -26,6 +27,7 @@ pub enum EvaluationFunction {
     Monotonicity,
     Smoothness,
     StdDev,
+    FreeSpace,
 }
 
 pub(super) fn evaluate(eval_fn: EvaluationFunction, node: &Node) -> i32 {
@@ -35,25 +37,35 @@ pub(super) fn evaluate(eval_fn: EvaluationFunction, node: &Node) -> i32 {
         EvaluationFunction::Monotonicity => evaluation_monotonicity(node),
         EvaluationFunction::Smoothness => evaluation_smoothness(node),
         EvaluationFunction::StdDev => evaluation_std_dev(node),
+        EvaluationFunction::FreeSpace => evaluation_free_space(node),
     }
 }
 
+/// range 0..65536 theory max 131072
 fn evaluation_max_cell(node: &Node) -> i32 {
     node.board.max_cell() as i32
 }
 
+/// range 0..~1_000_000
 fn evaluation_max_score(node: &Node) -> i32 {
     node.board.score as i32
 }
 
-fn evaluation_monotonicity(_node: &Node) -> i32 {
-    unimplemented!()
+fn evaluation_monotonicity(node: &Node) -> i32 {
+    matrix::monotonicity(&node.board.board)
 }
 
-fn evaluation_smoothness(_node: &Node) -> i32 {
-    unimplemented!()
+// range 0..384
+fn evaluation_smoothness(node: &Node) -> i32 {
+    //negate this - less is better
+    -matrix::smoothness(&node.board.board) + 384
 }
 
 fn evaluation_std_dev(_node: &Node) -> i32 {
     unimplemented!()
+}
+
+// range 0..15
+fn evaluation_free_space(node: &Node) -> i32 {
+    matrix::empty_count(&node.board.board) as i32
 }

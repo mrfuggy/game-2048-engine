@@ -28,28 +28,25 @@ pub enum Move {
 }
 
 impl Move {
-    pub(super) fn is_human(&self) -> bool {
+    pub(super) fn from_tuple(tuple: (u8, u8)) -> Move {
+        let (value, pos) = tuple;
+        Move::Random(value, pos)
+    }
+
+    pub(super) fn is_human(self) -> bool {
         match self {
             Move::Human(_) => true,
             Move::Random(_, _) => false,
         }
     }
-}
 
-/*impl PartialEq for Move {
-    fn eq(&self, other: &Self) -> bool {
+    pub(super) fn unwrap_random(self) -> (u8, u8) {
         match self {
-            Move::Human(l_dir) => match other {
-                Move::Human(r_dir) => l_dir == r_dir,
-                _ => false,
-            },
-            Move::Random(l_index, l_value) => match other {
-                Move::Random(r_index, r_value) => l_index == r_index & l_value == r_value,
-                _ => false,
-            }
+            Move::Random(value, pos) => (value, pos),
+            Move::Human(_) => panic!("unwrap random is not random move"),
         }
     }
-}*/
+}
 
 impl Default for Move {
     fn default() -> Move {

@@ -58,6 +58,7 @@ impl Board {
         let mut moved = false;
         for j in dir.get_range_j() {
             for i in dir.get_range_i() {
+                //TODO extimate speed if extract line and find in cache
                 if dir.is_horizontal() {
                     moved |= self.slide_h(dir, j, i);
                 } else {

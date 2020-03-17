@@ -29,6 +29,17 @@ pub struct Game {
 }
 
 impl Game {
+    /// Create new start position defined by seed
+    pub fn with_seed(seed: u32) -> Game {
+        let mut start_position = Game {
+            board: Board::new(),
+            rnd: Rnd::with_seed(seed),
+        };
+
+        start_position.init_new();
+        start_position
+    }
+
     /// Create new start position
     pub fn start_new() -> Game {
         let mut start_position = Game {
@@ -36,15 +47,19 @@ impl Game {
             rnd: random::get_rnd(),
         };
 
+        start_position.init_new();
+        start_position
+    }
+
+    fn init_new(&mut self) {
         const CELL_COUNT: u8 = (board::BOARD_SIZE * board::BOARD_SIZE) as u8;
         // 'CELL_COUNT' empty cell at the beginning
-        let next_move = start_position.rnd.next_move(CELL_COUNT);
-        start_position.board.set_move(next_move);
+        let next_move = self.rnd.next_move(CELL_COUNT);
+        self.board.set_move(next_move);
 
-        let next_move = start_position.rnd.next_move(CELL_COUNT - 1);
-        start_position.board.set_move(next_move);
-        start_position.board.move_count = 0;
-        start_position
+        let next_move = self.rnd.next_move(CELL_COUNT - 1);
+        self.board.set_move(next_move);
+        self.board.move_count = 0;
     }
 
     /// Make human move then random move
@@ -68,9 +83,7 @@ impl Game {
             return false;
         }
 
-        let moved = self.board.slide_to(dir);
-
-        moved
+        self.board.slide_to(dir)
     }
 
     /// Put random value in an empty spot

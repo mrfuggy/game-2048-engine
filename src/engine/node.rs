@@ -25,6 +25,8 @@ use crate::engine::evaluation;
 use crate::engine::moves::BestMove;
 use crate::engine::moves::Move;
 use crate::engine::moves::Statistics;
+use crate::random;
+use crate::random::RndMove;
 use std::mem::take;
 
 const BOARD_SIZE: usize = 4;
@@ -48,7 +50,7 @@ impl Node {
     pub(super) fn with_board(new_board: Board, turn: Move) -> Node {
         Node {
             board: new_board,
-            turn: turn,
+            turn,
             value: 0,
             children: None,
         }
@@ -76,8 +78,9 @@ impl Node {
         }
 
         //otherwise if not found, create new tree
-        self.board.move_count += 1;
-        return Node::with_board(self.board, random_move);
+        let rmove = random_move.unwrap_random();
+        self.board.set_move(rmove);
+        Node::with_board(self.board, random_move)
     }
 
     fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Option<Vec<Node>> {
@@ -115,7 +118,7 @@ impl Node {
         match config.random_mode {
             RandomCompleteness::Full => self.next_random_moves_full(),
             RandomCompleteness::Ordered(count) => self.next_random_moves_limit(count),
-            RandomCompleteness::MonteCarlo(_count) => unimplemented!(),
+            RandomCompleteness::MonteCarlo(count) => self.next_random_moves_montecarlo(count),
         }
     }
 
@@ -126,6 +129,28 @@ impl Node {
             let limit = limit - nodes.len() as u8;
             self.next_random_moves_value_limit(&mut nodes, 2, limit);
         }
+        nodes
+    }
+
+    fn next_random_moves_montecarlo(&self, mut limit: u8) -> Vec<Node> {
+        let mut rnd = random::get_rnd();
+        let mut empty_count = self.board.empty_count();
+
+        if empty_count < limit {
+            limit = empty_count;
+        }
+        let mut nodes: Vec<Node> = Vec::with_capacity(limit as usize);
+
+        for _i in 0..limit {
+            let next_move = rnd.next_move(empty_count);
+            let mut new_board = self.board;
+            new_board.set_move(next_move);
+            let node = Node::with_board(new_board, Move::from_tuple(next_move));
+            nodes.push(node);
+
+            empty_count -= 1;
+        }
+
         nodes
     }
 
@@ -190,7 +215,7 @@ impl Node {
 
         if max_player {
             let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(-1000000);
+            let mut value = BestMove::new(-1_000_000_000);
 
             if let Some(ref mut vec) = nodes {
                 for (index, node) in vec.iter_mut().enumerate() {
@@ -200,12 +225,13 @@ impl Node {
                 self.value = value.score;
                 value
             } else {
-                self.value = evaluation::evaluate(config.eval_fn, self);
-                return self.as_terminal_leaf();
+                //penalty for losing
+                self.value = evaluation::evaluate(config.eval_fn, self) - 1_000_000;
+                self.as_terminal_leaf()
             }
         } else {
             let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(1000000);
+            let mut value = BestMove::new(1_000_000_000);
 
             if let Some(ref mut vec) = nodes {
                 for (index, node) in vec.iter_mut().enumerate() {
@@ -215,8 +241,10 @@ impl Node {
                 self.value = value.score;
                 value
             } else {
-                self.value = evaluation::evaluate(config.eval_fn, self);
-                return self.as_terminal_leaf();
+                //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
+                //penalty for losing
+                self.value = evaluation::evaluate(config.eval_fn, self) + 1_000_000;
+                self.as_terminal_leaf()
             }
         }
     }
@@ -228,7 +256,7 @@ impl Node {
         }
 
         let nodes = self.gen_next_nodes(config);
-        let mut value = BestMove::new(-1000000);
+        let mut value = BestMove::new(-1_000_000_000);
 
         if let Some(ref mut vec) = nodes {
             for (index, node) in vec.iter_mut().enumerate() {
@@ -238,8 +266,10 @@ impl Node {
             self.value = value.score;
             value
         } else {
-            self.value = evaluation::evaluate(config.eval_fn, self);
-            return self.as_terminal_leaf();
+            //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
+            //penalty for losing
+            self.value = color as i32 * (evaluation::evaluate(config.eval_fn, self) - 1_000_000);
+            self.as_terminal_leaf()
         }
     }
 }

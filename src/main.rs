@@ -30,14 +30,14 @@ use std::io;
 fn main() {
     let mut game = Game::start_new();
     let engine_config = EngineConfig {
-        depth: 5,
-        eval_fn: EvaluationFunction::MaxScore,
+        depth: 3,
+        eval_fn: EvaluationFunction::Smoothness,
         algorithm: Algorithm::Negamax,
-        random_mode: RandomCompleteness::Full,
+        random_mode: RandomCompleteness::MonteCarlo(5),
     };
     let mut engine = Engine::from_game(&game, engine_config);
     loop {
-        println!("start {}", game);
+        println!("start move {} {} ", game.board.move_count, game);
         let best_move = engine.best_move();
         let move_made = game.human_move(best_move);
         println!("move {:?} {}", best_move, game);

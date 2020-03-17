@@ -86,6 +86,9 @@ impl RndMove for Rnd {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cmp::min;
+    use std::fs::File;
+    use std::io::Write;
 
     fn stddev(a: &Vec<i32>) -> f64 {
         let mut count = 0;
@@ -134,5 +137,35 @@ mod tests {
             value_freq,
             (value_freq[0] + value_freq[1]) as f64 / value_freq[1] as f64
         );
+    }
+
+    #[test]
+    #[ignore]
+    fn spectral_test() {
+        let mut file = File::create("spectral_test.csv").expect("Unable to create file");
+        writeln!(file, "n,n+1").unwrap();
+        let mut rnd = Rnd::new();
+        for _ in 0..3000 {
+            let seed = rnd.seed;
+            let next = rnd.next();
+            writeln!(file, "{},{}", seed, next).unwrap();
+        }
+    }
+
+    #[test]
+    fn minimal_cycle() {
+        let mut min_cycle = MODULUS * 2;
+        for i in 0..MODULUS {
+            let mut rnd = Rnd::with_seed(i);
+            rnd.next();
+            let mut c = 1;
+            while rnd.seed != i && c < MODULUS * 2 {
+                c += 1;
+                rnd.next();
+            }
+            min_cycle = min(min_cycle, c);
+        }
+        println!("minimal_cycle: {}", min_cycle);
+        assert!(min_cycle > MODULUS * 2 / 3);
     }
 }

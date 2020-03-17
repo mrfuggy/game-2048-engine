@@ -20,7 +20,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 use crate::board::Board;
 use crate::board::State;
 use crate::direction::Direction;
-use crate::engine::engine_config::EngineConfig;
+use crate::engine::engine_config::{EngineConfig, RandomCompleteness};
 use crate::engine::evaluation;
 use crate::engine::moves::BestMove;
 use crate::engine::moves::Move;
@@ -49,6 +49,14 @@ impl Node {
             turn: turn,
             value: 0,
             children: None,
+        }
+    }
+
+    fn to_leaf(&self) -> BestMove {
+        BestMove {
+            turn: self.turn,
+            local_id: 0,
+            score: self.value,
         }
     }
 
@@ -83,7 +91,25 @@ impl Node {
     }
 
     fn next_random_moves(&self, config: &EngineConfig) -> Vec<Node> {
-        let mut nodes: Vec<Node> = Vec::with_capacity(15);
+        match config.random_mode {
+            RandomCompleteness::Full => self.next_random_moves_full(),
+            RandomCompleteness::Ordered(count) => self.next_random_moves_limit(count),
+            RandomCompleteness::MonteCarlo(_count) => unimplemented!(),
+        }
+    }
+
+    fn next_random_moves_limit(&self, limit: u8) -> Vec<Node> {
+        let mut nodes: Vec<Node> = Vec::with_capacity(limit as usize);
+        self.next_random_moves_value_limit(&mut nodes, 1, limit);
+        if (nodes.len() as u8) < limit {
+            let limit = limit - nodes.len() as u8;
+            self.next_random_moves_value_limit(&mut nodes, 2, limit);
+        }
+        nodes
+    }
+
+    fn next_random_moves_full(&self) -> Vec<Node> {
+        let mut nodes: Vec<Node> = Vec::with_capacity(30);
         self.next_random_moves_value(&mut nodes, 1);
         self.next_random_moves_value(&mut nodes, 2);
         nodes.shrink_to_fit();
@@ -91,6 +117,7 @@ impl Node {
     }
 
     fn next_random_moves_value(&self, nodes: &mut Vec<Node>, value: u8) {
+        //TODO move to board
         let mut c = 0u8;
         for j in 0..BOARD_SIZE {
             for i in 0..BOARD_SIZE {
@@ -100,6 +127,25 @@ impl Node {
                     let node = Node::with_board(new_board, Move::Random(c, value));
                     nodes.push(node);
                     c += 1;
+                }
+            }
+        }
+    }
+
+    fn next_random_moves_value_limit(&self, nodes: &mut Vec<Node>, value: u8, limit: u8) {
+        //TODO move to board
+        let mut c = 0u8;
+        'outer: for j in 0..BOARD_SIZE {
+            for i in 0..BOARD_SIZE {
+                if self.board.board[j][i] == 0 {
+                    let mut new_board = self.board;
+                    new_board.board[j][i] = value;
+                    let node = Node::with_board(new_board, Move::Random(c, value));
+                    nodes.push(node);
+                    c += 1;
+                    if c >= limit {
+                        break 'outer;
+                    }
                 }
             }
         }
@@ -115,43 +161,27 @@ impl Node {
         max_player: bool,
     ) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
-            let score = evaluation::evaluate(config.eval_fn, self);
-            self.value = score;
-            return BestMove {
-                turn: self.turn,
-                local_id: 0,
-                score,
-            };
+            self.value = evaluation::evaluate(config.eval_fn, self);
+            return self.to_leaf();
         }
 
         if max_player {
-            let mut value = BestMove::new(-1000);
             let nodes = self.gen_next_nodes(config);
+            let mut value = BestMove::new(-1000);
+
             for (index, node) in nodes.iter_mut().enumerate() {
                 let best_move = node.minimax(config, depth - 1, false);
-                if best_move.score > value.score {
-                    value = BestMove {
-                        turn: node.turn,
-                        local_id: index as u8,
-                        score: best_move.score,
-                    };
-                }
+                value = max_score_move(best_move, &value, &node, index);
             }
             self.value = value.score;
             value
         } else {
-            let mut value = BestMove::new(1000);
             let nodes = self.gen_next_nodes(config);
+            let mut value = BestMove::new(1000);
 
             for (index, node) in nodes.iter_mut().enumerate() {
                 let best_move = node.minimax(config, depth - 1, true);
-                if best_move.score < value.score {
-                    value = BestMove {
-                        turn: node.turn,
-                        local_id: index as u8,
-                        score: best_move.score,
-                    };
-                }
+                value = min_score_move(best_move, &value, &node, index);
             }
             self.value = value.score;
             value
@@ -160,28 +190,52 @@ impl Node {
 
     pub(super) fn negamax(&mut self, config: &EngineConfig, depth: u16, color: i8) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
-            let score = color as i32 * evaluation::evaluate(config.eval_fn, self);
-            self.value = score;
-            return BestMove {
-                turn: self.turn,
-                local_id: 0,
-                score,
-            };
+            self.value = color as i32 * evaluation::evaluate(config.eval_fn, self);
+            return self.to_leaf();
         }
 
-        let mut value = BestMove::new(-1000);
         let nodes = self.gen_next_nodes(config);
+        let mut value = BestMove::new(-1000);
+
         for (index, node) in nodes.iter_mut().enumerate() {
             let best_move = -node.negamax(config, depth - 1, -color);
-            if best_move.score > value.score {
-                value = BestMove {
-                    turn: node.turn,
-                    local_id: index as u8,
-                    score: best_move.score,
-                };
-            }
+            value = max_score_move(best_move, &value, &node, index);
         }
         self.value = value.score;
         value
+    }
+}
+
+fn max_score_move(
+    best_move: BestMove,
+    current_value: &BestMove,
+    node: &Node,
+    index: usize,
+) -> BestMove {
+    if best_move.score > current_value.score {
+        BestMove {
+            turn: node.turn,
+            local_id: index as u8,
+            score: best_move.score,
+        }
+    } else {
+        *current_value
+    }
+}
+
+fn min_score_move(
+    best_move: BestMove,
+    current_value: &BestMove,
+    node: &Node,
+    index: usize,
+) -> BestMove {
+    if best_move.score < current_value.score {
+        BestMove {
+            turn: node.turn,
+            local_id: index as u8,
+            score: best_move.score,
+        }
+    } else {
+        *current_value
     }
 }

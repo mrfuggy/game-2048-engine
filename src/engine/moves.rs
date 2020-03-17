@@ -70,7 +70,7 @@ impl BestMove {
     }
 }
 
-impl Ord for BestMove {
+/*impl Ord for BestMove {
     fn cmp(&self, other: &Self) -> Ordering {
         self.score.cmp(&other.score)
     }
@@ -88,7 +88,7 @@ impl PartialEq for BestMove {
     fn eq(&self, other: &Self) -> bool {
         self.score == other.score
     }
-}
+}*/
 
 impl Neg for BestMove {
     type Output = BestMove;

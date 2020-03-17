@@ -28,6 +28,12 @@ pub struct Engine {
     pub(super) config: EngineConfig,
 }
 
+#[derive(Default)]
+pub(super) struct Statistics {
+    pub(super) total_nodes: u32,
+    pub(super) cut_nodes: u32,
+}
+
 impl Engine {
     pub fn from_game(game: &Game, config: EngineConfig) -> Engine {
         Engine {
@@ -37,24 +43,20 @@ impl Engine {
     }
 
     pub fn best_move(&mut self) -> Move {
+        let stat = Statistics::default();
         let best_move = match self.config.algorithm {
             Algorithm::Minimax => self.root.minimax(&self.config, self.config.depth, true),
             Algorithm::Negamax => self.root.negamax(&self.config, self.config.depth, 1),
             _ => unimplemented!(),
         };
 
-        //println!("{:?}", std::mem::size_of::<Node>());
+        println!("{:?}", std::mem::size_of::<[[u8; 4]; 4]>());
 
         //best_turn
         if let Some(ref mut vec) = self.root.children {
             let next_move = std::mem::take(&mut vec[best_move.local_id as usize]);
-            //let next_move = std::mem::take(vec[best_move.local_id as usize]);
-            //let next_move = &mut self.root.children.unwrap()[best_move.local_id as usize];
-            //std::mem::swap(&mut self.root, self.root.children.unwrap()[best_move.local_id as usize]);
-            //std::mem::swap(&mut self.root, next_move);
             std::mem::replace(&mut self.root, next_move);
         }
-        //self.root = self.root.children.unwrap()[best_move.local_id as usize];
         best_move.turn
     }
 }

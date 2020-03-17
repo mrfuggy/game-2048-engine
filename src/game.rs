@@ -27,9 +27,9 @@ use std::fmt;
 pub struct Game {
     board: [[u8; BOARD_SIZE]; BOARD_SIZE],
     rnd: Rnd,
-    state: State,
-    score: u32,
-    move_count: u16,
+    pub state: State,
+    pub score: u32,
+    pub move_count: u16,
 }
 
 pub const BOARD_SIZE: usize = 4;
@@ -88,6 +88,10 @@ impl Game {
         if move_made {
             self.random_move();
         }
+
+        if !self.can_move() {
+            self.state = State::Lose;
+        }
     }
 
     /// Make human move
@@ -110,8 +114,8 @@ impl Game {
         }
 
         //TODO
-        //return moved;
-        return true;
+        return moved;
+        //return true;
     }
 
     /// Slide board to specific side
@@ -230,11 +234,6 @@ impl Game {
     /// Put random value in an empty spot
     pub fn random_move(&mut self) -> Option<(u8, u8)> {
         if self.state == State::Lose {
-            return None;
-        }
-
-        if !self.can_move() {
-            self.state = State::Lose;
             return None;
         }
 

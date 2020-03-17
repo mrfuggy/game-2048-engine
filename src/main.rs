@@ -19,33 +19,35 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 mod direction;
 mod game;
+mod input;
 mod matrix;
 mod random;
 
 use direction::Direction;
-use game::Game;
+use game::{Game, State};
+use std::io;
 
 fn main() {
     let mut game = Game::start_new();
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
-    game.make_move(Direction::Up);
-    println!("{}", game);
+    loop {
+        println!("{}", game);
+        let mut input = String::new();
+
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+
+        if input.len() > 1 {
+            let dir = input::parse_input(&input.chars().nth(0).unwrap());
+            print!("\r");
+            if dir.is_some() {
+                game.make_move(dir.unwrap());
+            }
+        }
+
+        if game.state == State::Lose {
+            println!("You lost. Score:{}", game.score);
+            break;
+        }
+    }
 }

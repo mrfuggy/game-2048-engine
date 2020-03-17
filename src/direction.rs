@@ -57,10 +57,10 @@ impl Direction {
 
     pub(super) fn get_mask(&self) -> (usize, usize) {
         match self {
-            Direction::Right => (0usize, 1usize),
-            Direction::Left => (0usize, 1usize),
-            Direction::Up => (1usize, 0usize),
-            Direction::Down => (1usize, 0usize),
+            Direction::Right => (1usize, 0usize),
+            Direction::Left => (1usize, 0usize),
+            Direction::Up => (0usize, 1usize),
+            Direction::Down => (0usize, 1usize),
         }
     }
 

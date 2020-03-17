@@ -19,18 +19,18 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::Direction;
 
-fn parse_input(ch: char) -> Direction {
+pub fn parse_input(ch: &char) -> Option<Direction> {
     match ch {
-        'w' => Direction::Up,
-        'a' => Direction::Left,
-        's' => Direction::Down,
-        'd' => Direction::Right,
+        'w' => Some(Direction::Up),
+        'a' => Some(Direction::Left),
+        's' => Some(Direction::Down),
+        'd' => Some(Direction::Right),
 
-        '↑' => Direction::Up,
-        '←' => Direction::Left,
-        '↓' => Direction::Down,
-        '→' => Direction::Right,
+        '↑' => Some(Direction::Up),
+        '←' => Some(Direction::Left),
+        '↓' => Some(Direction::Down),
+        '→' => Some(Direction::Right),
 
-        _ => panic!("invalid key"),
+        _ => None,
     }
 }

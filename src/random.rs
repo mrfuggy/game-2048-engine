@@ -86,6 +86,23 @@ impl RndMove for Rnd {
 mod tests {
     use super::*;
 
+    fn variance(a: &Vec<i32>) -> f64 {
+        let mut count = 0;
+        let mut sum = 0;
+        for i in a {
+            count += 1;
+            sum += i;
+        }
+        let avg = sum as f64 / count as f64;
+        let mut var = 0f64;
+
+        for i in a {
+            var += (*i as f64 - avg) * (*i as f64 - avg);
+        }
+
+        var.sqrt()
+    }
+
     #[test]
     fn next_move_test() {
         let mut rnd = Rnd::new();
@@ -96,5 +113,25 @@ mod tests {
                 assert!(pos < c);
             }
         }
+    }
+
+    #[test]
+    fn next_move_freq_test() {
+        let mut rnd = Rnd::new();
+        let mut pos_freq = [0; 16];
+        let mut value_freq = [0; 2];
+        for _ in 0..100000 {
+            let (value, pos) = rnd.next_move(16);
+            assert!(value == 1 || value == 2);
+            assert!(pos < 16);
+            pos_freq[pos as usize] += 1;
+            value_freq[value as usize - 1] += 1;
+        }
+        println!("{:?} D: {:.3}", pos_freq, variance(&pos_freq.to_vec()));
+        println!(
+            "{:?} R: {:.3}",
+            value_freq,
+            (value_freq[0] + value_freq[1]) as f64 / value_freq[1] as f64
+        );
     }
 }

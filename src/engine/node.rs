@@ -22,91 +22,17 @@ use crate::board::State;
 use crate::direction::Direction;
 use crate::engine::engine_config::EngineConfig;
 use crate::engine::evaluation;
-use crate::game::Game;
-use std::cmp::Ordering;
-use std::ops::Neg;
+use crate::engine::moves::BestMove;
+use crate::engine::moves::Move;
 
 const BOARD_SIZE: usize = 4;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct Node {
     pub(crate) board: Board,
     turn: Move,
-    value: BestMove,
+    value: i32,
     pub(super) children: Option<Vec<Node>>,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Move {
-    Human(Direction),
-    Random(u8, u8),
-}
-
-impl Move {
-    fn is_human(&self) -> bool {
-        match self {
-            Move::Human(_) => true,
-            Move::Random(_, _) => false,
-        }
-    }
-    fn is_random(&self) -> bool {
-        !self.is_human()
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct BestMove {
-    pub turn: Move,
-    pub(super) local_id: u8,
-    score: i32,
-}
-
-impl BestMove {
-    fn new(score: i32) -> BestMove {
-        const EMPTY: Move = Move::Random(0, 0);
-        BestMove {
-            turn: EMPTY,
-            local_id: 0,
-            score,
-        }
-    }
-
-    fn with_local_id(self, local_id: u8) -> BestMove {
-        BestMove {
-            local_id: local_id,
-            ..self
-        }
-    }
-}
-
-impl Ord for BestMove {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.score.cmp(&other.score)
-    }
-}
-
-impl PartialOrd for BestMove {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Eq for BestMove {}
-
-impl PartialEq for BestMove {
-    fn eq(&self, other: &Self) -> bool {
-        self.score == other.score
-    }
-}
-
-impl Neg for BestMove {
-    type Output = BestMove;
-    fn neg(self) -> Self::Output {
-        BestMove {
-            score: -self.score,
-            ..self
-        }
-    }
 }
 
 const DIRICTION_CYCLE: [Direction; 4] = [
@@ -117,20 +43,11 @@ const DIRICTION_CYCLE: [Direction; 4] = [
 ];
 
 impl Node {
-    pub(super) fn from_game(game: &Game, game_move: Move) -> Node {
-        Node {
-            board: game.board,
-            turn: game_move,
-            value: BestMove::new(0),
-            children: None,
-        }
-    }
-
-    fn with_board(new_board: Board, game_move: Move) -> Node {
+    pub(super) fn with_board(new_board: Board, turn: Move) -> Node {
         Node {
             board: new_board,
-            turn: game_move,
-            value: BestMove::new(0),
+            turn: turn,
+            value: 0,
             children: None,
         }
     }
@@ -154,10 +71,10 @@ impl Node {
     fn next_human_moves(&self) -> Vec<Node> {
         let mut nodes: Vec<Node> = Vec::with_capacity(4);
         for dir in &DIRICTION_CYCLE {
-            let mut game = Game::from_node(self);
-            let moved = game.human_move(*dir);
+            let mut new_board = self.board;
+            let moved = new_board.slide_to(*dir);
             if moved {
-                let node = Node::from_game(&game, Move::Human(*dir));
+                let node = Node::with_board(new_board, Move::Human(*dir));
                 nodes.push(node);
             }
         }
@@ -199,12 +116,12 @@ impl Node {
     ) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             let score = evaluation::evaluate(config.eval_fn, self);
-            self.value = BestMove {
+            self.value = score;
+            return BestMove {
                 turn: self.turn,
                 local_id: 0,
                 score,
             };
-            return self.value;
         }
 
         if max_player {
@@ -220,8 +137,8 @@ impl Node {
                     };
                 }
             }
-            self.value = value;
-            self.value
+            self.value = value.score;
+            value
         } else {
             let mut value = BestMove::new(1000);
             let nodes = self.gen_next_nodes(config);
@@ -236,20 +153,20 @@ impl Node {
                     };
                 }
             }
-            self.value = value;
-            self.value
+            self.value = value.score;
+            value
         }
     }
 
     pub(super) fn negamax(&mut self, config: &EngineConfig, depth: u16, color: i8) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             let score = color as i32 * evaluation::evaluate(config.eval_fn, self);
-            self.value = BestMove {
+            self.value = score;
+            return BestMove {
                 turn: self.turn,
                 local_id: 0,
                 score,
             };
-            return self.value;
         }
 
         let mut value = BestMove::new(-1000);
@@ -264,7 +181,7 @@ impl Node {
                 };
             }
         }
-        self.value = value;
-        self.value
+        self.value = value.score;
+        value
     }
 }

@@ -19,7 +19,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::engine::engine_config::Algorithm;
 use crate::engine::engine_config::EngineConfig;
-use crate::engine::node::Move;
+use crate::engine::moves::Move;
 use crate::engine::node::Node;
 use crate::game::Game;
 
@@ -31,7 +31,7 @@ pub struct Engine {
 impl Engine {
     pub fn from_game(game: &Game, config: EngineConfig) -> Engine {
         Engine {
-            root: Node::from_game(game, Move::Random(0, 0)),
+            root: Node::with_board(game.board, Move::Random(0, 0)),
             config,
         }
     }
@@ -43,14 +43,16 @@ impl Engine {
             _ => unimplemented!(),
         };
 
+        //println!("{:?}", std::mem::size_of::<Node>());
+
         //best_turn
         if let Some(ref mut vec) = self.root.children {
-            let next_move = &mut vec[best_move.local_id as usize];
+            let next_move = std::mem::take(&mut vec[best_move.local_id as usize]);
             //let next_move = std::mem::take(vec[best_move.local_id as usize]);
             //let next_move = &mut self.root.children.unwrap()[best_move.local_id as usize];
             //std::mem::swap(&mut self.root, self.root.children.unwrap()[best_move.local_id as usize]);
-            std::mem::swap(&mut self.root, next_move);
-            //std::mem::replace(&mut self.root, next_move);
+            //std::mem::swap(&mut self.root, next_move);
+            std::mem::replace(&mut self.root, next_move);
         }
         //self.root = self.root.children.unwrap()[best_move.local_id as usize];
         best_move.turn

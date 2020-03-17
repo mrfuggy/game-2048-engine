@@ -22,7 +22,7 @@ use game_2048_engine::direction::Direction;
 use game_2048_engine::engine::engine::Engine;
 use game_2048_engine::engine::engine_config::{Algorithm, EngineConfig, RandomCompleteness};
 use game_2048_engine::engine::evaluation::EvaluationFunction;
-use game_2048_engine::engine::node::Move;
+use game_2048_engine::engine::moves::Move;
 use game_2048_engine::game::Game;
 use game_2048_engine::input;
 use std::io;
@@ -30,7 +30,7 @@ use std::io;
 fn main() {
     let mut game = Game::start_new();
     let engine_config = EngineConfig {
-        depth: 7,
+        depth: 5,
         eval_fn: EvaluationFunction::MaxCell,
         algorithm: Algorithm::Negamax,
         random_mode: RandomCompleteness::Full,
@@ -41,11 +41,9 @@ fn main() {
     if let Move::Human(human_move) = best_move {
         println!("{:?}", human_move);
     }
-    if let Move::Random(c, v) = best_move {
-        println!("{} = {}", c, v);
-    }
 }
 
+#[allow(dead_code)]
 fn game() {
     let mut game = Game::start_new();
     loop {
@@ -71,6 +69,7 @@ fn game() {
     }
 }
 
+#[allow(dead_code)]
 fn simple_strategy() {
     let mut game = Game::start_new();
 

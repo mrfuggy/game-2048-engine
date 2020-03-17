@@ -20,4 +20,5 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 pub mod engine;
 pub mod engine_config;
 pub mod evaluation;
+pub mod moves;
 pub mod node;

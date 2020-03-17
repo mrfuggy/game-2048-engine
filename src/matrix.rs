@@ -43,6 +43,7 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     c
 }
 
+#[allow(dead_code)]
 /// Transpose the matrix
 pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE {
@@ -56,6 +57,7 @@ pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     }
 }
 
+#[allow(dead_code)]
 /// Mirror a matrix horizontally
 pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE / 2 {

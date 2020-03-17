@@ -20,7 +20,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 use crate::direction::Direction;
 use crate::matrix;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Board {
     pub board: [[u8; BOARD_SIZE]; BOARD_SIZE],
     pub state: State,
@@ -34,6 +34,12 @@ pub const BOARD_SIZE: usize = 4;
 pub enum State {
     InGame,
     Lose,
+}
+
+impl Default for State {
+    fn default() -> State {
+        State::InGame
+    }
 }
 
 impl Board {

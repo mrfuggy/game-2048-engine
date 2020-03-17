@@ -47,18 +47,6 @@ impl Game {
         start_position
     }
 
-    pub(super) fn from_node(node: &Node) -> Game {
-        let mut game = Game {
-            board: node.board,
-            rnd: Rnd::with_seed(0),
-        };
-
-        if !game.board.can_move() {
-            game.board.state = State::Lose;
-        }
-        game
-    }
-
     /// Make human move then random move
     pub fn make_move(&mut self, dir: Direction) -> bool {
         let move_made = self.human_move(dir);

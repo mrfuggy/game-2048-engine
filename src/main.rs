@@ -30,7 +30,7 @@ use std::io;
 fn main() {
     let mut game = Game::start_new();
     let engine_config = EngineConfig {
-        depth: 3,
+        depth: 7,
         eval_fn: EvaluationFunction::MaxCell,
         algorithm: Algorithm::Negamax,
         random_mode: RandomCompleteness::Full,

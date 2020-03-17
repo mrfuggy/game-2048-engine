@@ -23,8 +23,6 @@ use crate::direction::Direction;
 use crate::engine::engine_config::EngineConfig;
 use crate::engine::evaluation;
 use crate::game::Game;
-use std::cmp::max;
-use std::cmp::min;
 use std::cmp::Ordering;
 use std::ops::Neg;
 
@@ -35,7 +33,7 @@ pub(crate) struct Node {
     pub(crate) board: Board,
     turn: Move,
     value: BestMove,
-    childred: Option<Vec<Node>>,
+    pub(super) children: Option<Vec<Node>>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -57,18 +55,33 @@ impl Move {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct BestMove(pub Move, i32);
+pub struct BestMove {
+    pub turn: Move,
+    pub(super) local_id: u8,
+    score: i32,
+}
 
 impl BestMove {
     fn new(score: i32) -> BestMove {
         const EMPTY: Move = Move::Random(0, 0);
-        BestMove(EMPTY, score)
+        BestMove {
+            turn: EMPTY,
+            local_id: 0,
+            score,
+        }
+    }
+
+    fn with_local_id(self, local_id: u8) -> BestMove {
+        BestMove {
+            local_id: local_id,
+            ..self
+        }
     }
 }
 
 impl Ord for BestMove {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.1.cmp(&other.1)
+        self.score.cmp(&other.score)
     }
 }
 
@@ -82,14 +95,17 @@ impl Eq for BestMove {}
 
 impl PartialEq for BestMove {
     fn eq(&self, other: &Self) -> bool {
-        self.1 == other.1
+        self.score == other.score
     }
 }
 
 impl Neg for BestMove {
     type Output = BestMove;
     fn neg(self) -> Self::Output {
-        BestMove(self.0, -self.1)
+        BestMove {
+            score: -self.score,
+            ..self
+        }
     }
 }
 
@@ -106,7 +122,7 @@ impl Node {
             board: game.board,
             turn: game_move,
             value: BestMove::new(0),
-            childred: None,
+            children: None,
         }
     }
 
@@ -115,21 +131,21 @@ impl Node {
             board: new_board,
             turn: game_move,
             value: BestMove::new(0),
-            childred: None,
+            children: None,
         }
     }
 
     fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Vec<Node> {
-        if self.childred.is_none() {
+        if self.children.is_none() {
             let nodes = if self.turn.is_human() {
                 self.next_random_moves(config)
             } else {
                 self.next_human_moves()
             };
-            self.childred = Some(nodes);
+            self.children = Some(nodes);
         }
 
-        match self.childred {
+        match self.children {
             Some(ref mut vec) => vec,
             _ => unreachable!(),
         }
@@ -183,15 +199,26 @@ impl Node {
     ) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             let score = evaluation::evaluate(config.eval_fn, self);
-            self.value = BestMove(self.turn, score);
+            self.value = BestMove {
+                turn: self.turn,
+                local_id: 0,
+                score,
+            };
             return self.value;
         }
 
         if max_player {
             let mut value = BestMove::new(-1000);
             let nodes = self.gen_next_nodes(config);
-            for node in nodes.iter_mut() {
-                value = max(node.minimax(config, depth - 1, false), value);
+            for (index, node) in nodes.iter_mut().enumerate() {
+                let best_move = node.minimax(config, depth - 1, false);
+                if best_move.score > value.score {
+                    value = BestMove {
+                        turn: node.turn,
+                        local_id: index as u8,
+                        score: best_move.score,
+                    };
+                }
             }
             self.value = value;
             self.value
@@ -199,8 +226,15 @@ impl Node {
             let mut value = BestMove::new(1000);
             let nodes = self.gen_next_nodes(config);
 
-            for node in nodes.iter_mut() {
-                value = min(node.minimax(config, depth - 1, true), value);
+            for (index, node) in nodes.iter_mut().enumerate() {
+                let best_move = node.minimax(config, depth - 1, true);
+                if best_move.score < value.score {
+                    value = BestMove {
+                        turn: node.turn,
+                        local_id: index as u8,
+                        score: best_move.score,
+                    };
+                }
             }
             self.value = value;
             self.value
@@ -210,14 +244,25 @@ impl Node {
     pub(super) fn negamax(&mut self, config: &EngineConfig, depth: u16, color: i8) -> BestMove {
         if depth == 0 || self.board.state == State::Lose {
             let score = color as i32 * evaluation::evaluate(config.eval_fn, self);
-            self.value = BestMove(self.turn, score);
+            self.value = BestMove {
+                turn: self.turn,
+                local_id: 0,
+                score,
+            };
             return self.value;
         }
 
         let mut value = BestMove::new(-1000);
         let nodes = self.gen_next_nodes(config);
-        for node in nodes.iter_mut() {
-            value = max(-node.negamax(config, depth - 1, -color), value);
+        for (index, node) in nodes.iter_mut().enumerate() {
+            let best_move = -node.negamax(config, depth - 1, -color);
+            if best_move.score > value.score {
+                value = BestMove {
+                    turn: node.turn,
+                    local_id: index as u8,
+                    score: best_move.score,
+                };
+            }
         }
         self.value = value;
         self.value

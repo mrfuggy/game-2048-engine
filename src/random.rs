@@ -42,6 +42,12 @@ impl Rnd {
         }
     }
 
+    pub(super) fn new_with_seed(seed: u32) -> Rnd {
+        Rnd {
+            seed: seed as u32 % MODULUS,
+        }
+    }
+
     pub(super) fn next(&mut self) -> u32 {
         let next = (self.seed * MULTIPLIER + INCREMENT) % MODULUS;
         self.seed = next;

@@ -20,9 +20,19 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 mod game;
 mod random;
 
-use game::Game;
+use game::{Direction, Game};
 
 fn main() {
     let mut game = Game::start_new();
+    println!("{:?}", game);
+    game.make_move(Direction::Up);
+    println!("{:?}", game);
+    game.make_move(Direction::Right);
+    println!("{:?}", game);
+    game.make_move(Direction::Down);
+    println!("{:?}", game);
+    game.make_move(Direction::Down);
+    println!("{:?}", game);
+    game.make_move(Direction::Down);
     println!("{:?}", game);
 }

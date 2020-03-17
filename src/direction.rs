@@ -64,6 +64,16 @@ impl Direction {
         }
     }
 
+    // ← ↑ → ↓ - loop order
+    // ↤ ↦ ↥ ↧ - find
+
+    // Direction = j i k
+    // Left      = ↓ → ↦
+    // Right     = ↓ ← ↤
+    // Up        = ↓ → ↧
+    // Down      = ↑ → ↥
+
+    /// Vertical order
     pub(super) fn get_range_j(&self) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(0..BOARD_SIZE),
@@ -73,6 +83,7 @@ impl Direction {
         }
     }
 
+    /// Horizontal order
     pub(super) fn get_range_i(&self) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(0..BOARD_SIZE - 1),
@@ -82,6 +93,7 @@ impl Direction {
         }
     }
 
+    /// Search order next value in the current line
     pub(super) fn get_range_k(&self, current: usize) -> RangeOrRev {
         match self {
             Direction::Left => RangeOrRev::RORRange(current + 1..BOARD_SIZE),

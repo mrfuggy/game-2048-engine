@@ -19,6 +19,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::game::BOARD_SIZE;
 
+/// Count the number of empty cells
 pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     let mut c = 0u8;
     for j in 0..BOARD_SIZE {
@@ -29,6 +30,7 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     c
 }
 
+/// Transpose the matrix
 pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE {
         for i in 0..BOARD_SIZE {
@@ -41,6 +43,7 @@ pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     }
 }
 
+/// Mirror a matrix horizontally
 pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE / 2 {
         let tmp = m[j];

@@ -25,6 +25,12 @@ fn parse_input(ch: char) -> Direction {
         'a' => Direction::Left,
         's' => Direction::Down,
         'd' => Direction::Right,
+
+        '↑' => Direction::Up,
+        '←' => Direction::Left,
+        '↓' => Direction::Down,
+        '→' => Direction::Right,
+
         _ => panic!("invalid key"),
     }
 }

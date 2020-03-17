@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug)]
@@ -24,13 +25,29 @@ pub(super) struct Rnd {
     pub(super) seed: u32,
 }
 
-//Linear congruential generator
+// Linear congruential generator
 const MODULUS: u32 = 6075;
 const MULTIPLIER: u32 = 106;
 const INCREMENT: u32 = 1283;
 
 pub(super) trait RndMove {
     fn next_move(&mut self, empty_count: u8) -> (u8, u8);
+}
+
+static SEED: AtomicU32 = AtomicU32::new(0);
+static HAS_INIT: AtomicBool = AtomicBool::new(false);
+
+/// create new 'Rnd' every game
+pub(super) fn get_rnd() -> Rnd {
+    if !HAS_INIT.compare_and_swap(false, true, Ordering::Relaxed) {
+        let rnd = Rnd::new();
+        SEED.store(rnd.seed, Ordering::Relaxed);
+        rnd
+    } else {
+        let mut rnd = Rnd::new_with_seed(SEED.load(Ordering::Relaxed));
+        SEED.store(rnd.next(), Ordering::Relaxed);
+        rnd
+    }
 }
 
 impl Rnd {
@@ -58,7 +75,7 @@ impl Rnd {
 impl RndMove for Rnd {
     fn next_move(&mut self, empty_count: u8) -> (u8, u8) {
         let next = self.next();
-        //10% double value
+        // 10% double value
         let value = if next > (MODULUS - 1) / 10 { 1 } else { 2 };
 
         (value, (next % empty_count as u32) as u8)

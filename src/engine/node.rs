@@ -26,9 +26,11 @@ use crate::game::Game;
 use std::cmp::max;
 use std::cmp::min;
 use std::cmp::Ordering;
+use std::ops::Neg;
 
 const BOARD_SIZE: usize = 4;
 
+#[derive(Debug)]
 pub(crate) struct Node {
     pub(crate) board: Board,
     turn: Move,
@@ -36,23 +38,7 @@ pub(crate) struct Node {
     childred: Option<Vec<Node>>,
 }
 
-/*#[derive(PartialEq)]
-enum NodeState {
-    NotEnded,
-    Illegal,
-    Terminal,
-}
-
-/impl NodeState {
-    fn from_game_state(state: &State) -> NodeState {
-        match state {
-            State::InGame => NodeState::NotEnded,
-            State::Lose => NodeState::Terminal,
-        }
-    }
-}*/
-
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Move {
     Human(Direction),
     Random(u8, u8),
@@ -70,8 +56,8 @@ impl Move {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct BestMove(Move, i32);
+#[derive(Debug, Clone, Copy)]
+pub struct BestMove(pub Move, i32);
 
 impl BestMove {
     fn new(score: i32) -> BestMove {
@@ -100,12 +86,12 @@ impl PartialEq for BestMove {
     }
 }
 
-/*fn get_node(node: &Node, local_id: u8) -> &Node {
-    match &node.childred {
-        None => node,
-        Some(vec) => &vec[local_id as usize],
+impl Neg for BestMove {
+    type Output = BestMove;
+    fn neg(self) -> Self::Output {
+        BestMove(self.0, -self.1)
     }
-}*/
+}
 
 const DIRICTION_CYCLE: [Direction; 4] = [
     Direction::Left,
@@ -136,9 +122,9 @@ impl Node {
     fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Vec<Node> {
         if self.childred.is_none() {
             let nodes = if self.turn.is_human() {
-                self.next_human_moves()
+                self.next_random_moves(config)
             } else {
-                self.next_random_moves()
+                self.next_human_moves()
             };
             self.childred = Some(nodes);
         }
@@ -163,7 +149,7 @@ impl Node {
         nodes
     }
 
-    fn next_random_moves(&self) -> Vec<Node> {
+    fn next_random_moves(&self, config: &EngineConfig) -> Vec<Node> {
         let mut nodes: Vec<Node> = Vec::with_capacity(15);
         self.next_random_moves_value(&mut nodes, 1);
         self.next_random_moves_value(&mut nodes, 2);
@@ -178,7 +164,7 @@ impl Node {
                 if self.board.board[j][i] == 0 {
                     let mut new_board = self.board;
                     new_board.board[j][i] = value;
-                    let node = Node::with_board(new_board, Move::Random(c, 1));
+                    let node = Node::with_board(new_board, Move::Random(c, value));
                     nodes.push(node);
                     c += 1;
                 }
@@ -202,21 +188,38 @@ impl Node {
         }
 
         if max_player {
-            let mut value = BestMove::new(-1);
+            let mut value = BestMove::new(-1000);
             let nodes = self.gen_next_nodes(config);
             for node in nodes.iter_mut() {
-                value = max(value, node.minimax(config, depth - 1, false));
+                value = max(node.minimax(config, depth - 1, false), value);
             }
             self.value = value;
             self.value
         } else {
-            let mut value = BestMove::new(1);
+            let mut value = BestMove::new(1000);
             let nodes = self.gen_next_nodes(config);
+
             for node in nodes.iter_mut() {
-                value = min(value, node.minimax(config, depth - 1, true));
+                value = min(node.minimax(config, depth - 1, true), value);
             }
             self.value = value;
             self.value
         }
+    }
+
+    pub(super) fn negamax(&mut self, config: &EngineConfig, depth: u16, color: i8) -> BestMove {
+        if depth == 0 || self.board.state == State::Lose {
+            let score = color as i32 * evaluation::evaluate(config.eval_fn, self);
+            self.value = BestMove(self.turn, score);
+            return self.value;
+        }
+
+        let mut value = BestMove::new(-1000);
+        let nodes = self.gen_next_nodes(config);
+        for node in nodes.iter_mut() {
+            value = max(-node.negamax(config, depth - 1, -color), value);
+        }
+        self.value = value;
+        self.value
     }
 }

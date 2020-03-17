@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-mod engine;
-mod engine_config;
-mod evaluation;
-pub(super) mod node;
+pub mod engine;
+pub mod engine_config;
+pub mod evaluation;
+pub mod node;

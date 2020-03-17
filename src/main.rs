@@ -17,15 +17,36 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-extern crate game_2048_engine;
-
 use game_2048_engine::board::State;
 use game_2048_engine::direction::Direction;
+use game_2048_engine::engine::engine::Engine;
+use game_2048_engine::engine::engine_config::{Algorithm, EngineConfig, RandomCompleteness};
+use game_2048_engine::engine::evaluation::EvaluationFunction;
+use game_2048_engine::engine::node::Move;
 use game_2048_engine::game::Game;
 use game_2048_engine::input;
 use std::io;
 
 fn main() {
+    let mut game = Game::start_new();
+    let engine_config = EngineConfig {
+        depth: 3,
+        eval_fn: EvaluationFunction::MaxCell,
+        algorithm: Algorithm::Negamax,
+        random_mode: RandomCompleteness::Full,
+    };
+    let mut engine = Engine::from_game(&game, engine_config);
+    let best_move = engine.best_move();
+    println!("{}", game);
+    if let Move::Human(human_move) = best_move {
+        println!("{:?}", human_move);
+    }
+    if let Move::Random(c, v) = best_move {
+        println!("{} = {}", c, v);
+    }
+}
+
+fn game() {
     let mut game = Game::start_new();
     loop {
         println!("{}", game);

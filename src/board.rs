@@ -20,7 +20,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 use crate::direction::Direction;
 use crate::matrix;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Board {
     pub board: [[u8; BOARD_SIZE]; BOARD_SIZE],
     pub state: State,

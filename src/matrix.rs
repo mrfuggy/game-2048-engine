@@ -43,6 +43,9 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
     c
 }
 
+/// Multiply vector by vector
+//fn vec_multiply()
+
 /// Sum of absolute value of the difference between pairs
 pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     let mut c = 0;
@@ -87,8 +90,45 @@ pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     c
 }
 
-pub fn std_dev(_m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
-    unimplemented!()
+pub fn std_dev(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+    let mut c = 0u8;
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
+            c += m[j][i];
+        }
+    }
+    let avg = c as f32 / 16.0;
+
+    let mut sd = 0f32;
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
+            sd += (m[j][i] as f32 - avg) * (m[j][i] as f32 - avg);
+        }
+    }
+    println!("{:?}", sd);
+    (sd.sqrt() * 29000.0) as i32
+}
+
+const SNAKE_COEFFICIENTS: [[i32; BOARD_SIZE]; BOARD_SIZE] = [
+    [140, 120, 110, 115],
+    [45, 47, 50, 70],
+    [35, 25, 22, 20],
+    [2, 3, 5, 10],
+];
+
+pub fn snakeiness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+    //let res = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+    let mut c = 0i32;
+    for j in 0..BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
+            //res[j][i]
+            c += m[i][0] as i32 * SNAKE_COEFFICIENTS[j][0]
+                + m[i][1] as i32 * SNAKE_COEFFICIENTS[j][1]
+                + m[i][2] as i32 * SNAKE_COEFFICIENTS[j][2]
+                + m[i][3] as i32 * SNAKE_COEFFICIENTS[j][3];
+        }
+    }
+    c
 }
 
 #[allow(dead_code)]
@@ -253,6 +293,52 @@ mod tests {
         }
         let actual = smoothness(&board);
         assert_eq!(actual, 384);
+    }
+
+    #[test]
+    fn snakeiness0_test() {
+        let board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        let actual = snakeiness(&board);
+        assert_eq!(actual, 0);
+    }
+
+    #[test]
+    fn snakeiness_asc_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        for j in 0..BOARD_SIZE {
+            for i in 0..BOARD_SIZE {
+                board[j][i] = (j + i + 1) as u8;
+            }
+        }
+        let actual = snakeiness(&board);
+        assert_eq!(actual, 13046);
+    }
+
+    #[test]
+    fn snakeiness_desc_test() {
+        let mut board = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+        for j in 0..BOARD_SIZE {
+            for i in 0..BOARD_SIZE {
+                board[j][i] = (16 - j + i + 1) as u8;
+            }
+        }
+        let actual = snakeiness(&board);
+        assert_eq!(actual, 55634);
+    }
+
+    #[test]
+    fn snakeiness_full_test() {
+        let board = [[16u8; BOARD_SIZE]; BOARD_SIZE];
+        let actual = snakeiness(&board);
+        assert_eq!(actual, 52416);
+    }
+
+    #[test]
+    fn std_dev_test() {
+        let mut board = [[8u8; BOARD_SIZE]; BOARD_SIZE];
+        board[0][0] = 4;
+        let actual = std_dev(&board);
+        assert_eq!(actual, 112316);
     }
 
     #[test]

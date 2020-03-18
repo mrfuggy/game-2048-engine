@@ -37,6 +37,7 @@ fn main() {
         smoothness: 50,
         std_dev: 0,
         free_space: 300,
+        snakeiness: 0,
     };
     let engine_config = EngineConfig {
         depth: 5,

@@ -31,17 +31,20 @@ pub struct Weights {
     pub smoothness: i32,
     pub std_dev: i32,
     pub free_space: i32,
+    pub snakeiness: i32,
 }
 
 impl Weights {
     pub fn normalize(mut self) -> Weights {
-        self.max_cell = self.max_cell * 13;
+        self.max_cell = self.max_cell * 14;
         //baseline 900_000 score
         //self.max_score = self.max_score * 1;
         self.monotonicity = self.monotonicity * 112_500;
-        self.smoothness = self.smoothness * 2343;
-        self.std_dev = self.std_dev * 1;
+        self.smoothness = self.smoothness * 2344;
+        //almost equals
+        //self.std_dev = self.std_dev * 1;
         self.free_space = self.free_space * 60000;
+        self.snakeiness = self.snakeiness * 23;
         self
     }
 }
@@ -66,6 +69,9 @@ pub(super) fn evaluate(weights: Weights, node: &Node) -> i32 {
     if weights.free_space != 0 {
         score += weights.free_space * evaluation_free_space(node);
     }
+    if weights.snakeiness != 0 {
+        score += weights.snakeiness * evaluation_snakeiness(node);
+    }
     score
 }
 
@@ -74,7 +80,7 @@ fn evaluation_max_cell(node: &Node) -> i32 {
     node.board.max_cell() as i32
 }
 
-/// range 0..~1_000_000 effective to win 60_000
+/// range 0..~900_000 effective to win 60_000
 fn evaluation_max_score(node: &Node) -> i32 {
     node.board.score as i32
 }
@@ -90,11 +96,18 @@ fn evaluation_smoothness(node: &Node) -> i32 {
     -matrix::smoothness(&node.board.board) + 384
 }
 
+// range 0..~990_000
 fn evaluation_std_dev(node: &Node) -> i32 {
-    matrix::std_dev(&node.board.board)
+    //negate this - less is better
+    -matrix::std_dev(&node.board.board) + 1000
 }
 
 // range 0..15
 fn evaluation_free_space(node: &Node) -> i32 {
     matrix::empty_count(&node.board.board) as i32
+}
+
+// range 0..39312
+fn evaluation_snakeiness(node: &Node) -> i32 {
+    matrix::snakeiness(&node.board.board) as i32
 }

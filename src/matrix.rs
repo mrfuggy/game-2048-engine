@@ -156,25 +156,25 @@ pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
 /// Convert to u64 id
 pub fn to_u64(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u64 {
     let mut res: u64 = 0;
-    for i in 0..4 {
-        for j in 0..4 {
+    for i in 0..BOARD_SIZE {
+        for j in 0..BOARD_SIZE {
             res = (res << 4) + m[j][i] as u64;
         }
     }
-    return res;
+    res
 }
 
 #[allow(dead_code)]
 /// Create array from u64
-fn from_u64(mut pos: u64) -> [[u8; 4]; 4] {
-    let mut m = [[0u8; 4]; 4];
-    for i in 0..4 {
-        for j in 0..4 {
+fn from_u64(mut pos: u64) -> [[u8; BOARD_SIZE]; BOARD_SIZE] {
+    let mut m = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+    for i in 0..BOARD_SIZE {
+        for j in 0..BOARD_SIZE {
             m[j][i] = (pos & 0b1111) as u8;
             pos = pos >> 4;
         }
     }
-    return m;
+    m
 }
 
 #[cfg(test)]

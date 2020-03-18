@@ -28,8 +28,8 @@ use game_2048_engine::input;
 use std::io;
 
 fn main() {
-    //let mut game = Game::with_seed(3);
-    let mut game = Game::start_new();
+    let mut game = Game::with_seed(3);
+    //let mut game = Game::start_new();
     let weights = Weights {
         max_cell: 30,
         max_score: 10,
@@ -40,17 +40,22 @@ fn main() {
         snakeiness: 0,
     };
     let engine_config = EngineConfig {
-        depth: 5,
+        depth: 7,
         eval_fn: weights.normalize(),
-        algorithm: Algorithm::Minimax,
-        random_mode: RandomCompleteness::MonteCarlo(10),
+        algorithm: Algorithm::NegamaxAlphaBeta,
+        //algorithm: Algorithm::MinimaxAlphaBeta,
+        random_mode: RandomCompleteness::Full,
+        //random_mode: RandomCompleteness::MonteCarlo(10),
     };
     let mut engine = Engine::from_game(&game, engine_config);
     loop {
         println!("start move {} {} ", game.board.move_count, game);
         let best_move = engine.best_move();
         let move_made = game.human_move(best_move);
-        println!("move {:?} {}", best_move, game);
+        println!("move {:?}", best_move);
+        /*if game.board.move_count > 1 {
+            break;
+        }*/
         if move_made {
             if let Some((i, v)) = game.random_move() {
                 engine.make_random_move(Move::Random(i, v));

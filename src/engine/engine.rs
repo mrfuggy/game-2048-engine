@@ -42,9 +42,21 @@ impl Engine {
     pub fn best_move(&mut self) -> Direction {
         let best_move = match self.config.algorithm {
             Algorithm::Minimax => self.root.minimax(&self.config, self.config.depth, true),
-            Algorithm::MinimaxAlphaBeta => unimplemented!(),
+            Algorithm::MinimaxAlphaBeta => self.root.minimax_alphabeta(
+                &self.config,
+                self.config.depth,
+                i32::min_value() + 1,
+                i32::max_value(),
+                true,
+            ),
             Algorithm::Negamax => self.root.negamax(&self.config, self.config.depth, 1),
-            Algorithm::NegamaxAlphaBeta => unimplemented!(),
+            Algorithm::NegamaxAlphaBeta => self.root.negamax_alphabeta(
+                &self.config,
+                self.config.depth,
+                i32::min_value() + 1,
+                i32::max_value(),
+                1,
+            ),
             Algorithm::NegaScout => unimplemented!(),
             Algorithm::ExpectiMinimax => unimplemented!(),
         };

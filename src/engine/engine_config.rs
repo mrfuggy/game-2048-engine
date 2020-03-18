@@ -27,8 +27,11 @@ pub struct EngineConfig {
 }
 
 pub enum RandomCompleteness {
+    /// All posible moves
     Full,
+    /// n First posible moves
     Ordered(u8),
+    /// n Random posible moves
     MonteCarlo(u8),
 }
 

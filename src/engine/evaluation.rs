@@ -36,15 +36,15 @@ pub struct Weights {
 
 impl Weights {
     pub fn normalize(mut self) -> Weights {
-        self.max_cell = self.max_cell * 14;
+        self.max_cell *= 14;
         //baseline 900_000 score
-        //self.max_score = self.max_score * 1;
-        self.monotonicity = self.monotonicity * 112_500;
-        self.smoothness = self.smoothness * 2344;
+        //self.max_score *= 1;
+        self.monotonicity *= 112_500;
+        self.smoothness *= 2344;
         //almost equals
-        //self.std_dev = self.std_dev * 1;
-        self.free_space = self.free_space * 60000;
-        self.snakeiness = self.snakeiness * 23;
+        //self.std_dev *= 1;
+        self.free_space *= 60000;
+        self.snakeiness *= 23;
         self
     }
 }

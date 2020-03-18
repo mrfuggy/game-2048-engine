@@ -27,6 +27,8 @@ use crate::engine::moves::Move;
 use crate::engine::moves::Statistics;
 use crate::random;
 use crate::random::RndMove;
+use std::cmp::max;
+use std::cmp::min;
 use std::mem::take;
 
 const BOARD_SIZE: usize = 4;
@@ -38,6 +40,9 @@ pub(super) struct Node {
     value: i32,
     pub(super) children: Option<Vec<Node>>,
 }
+
+//TODO estimate the possibility of cutting a node with non full filling or alpha-beta
+const PENALTY: i32 = 1_000_000;
 
 const DIRICTION_CYCLE: [Direction; 4] = [
     Direction::Left,
@@ -205,6 +210,67 @@ impl Node {
 
 //algorithms
 impl Node {
+    pub(super) fn minimax_alphabeta(
+        &mut self,
+        config: &EngineConfig,
+        depth: u16,
+        mut alpha: i32,
+        mut beta: i32,
+        max_player: bool,
+    ) -> BestMove {
+        if depth == 0 || self.board.state == State::Lose {
+            self.value = evaluation::evaluate(config.eval_fn, self);
+            return self.as_terminal_leaf();
+        }
+
+        if max_player {
+            let nodes = self.gen_next_nodes(config);
+            let mut value = BestMove::new(i32::min_value());
+
+            if let Some(ref mut vec) = nodes {
+                for (index, node) in vec.iter_mut().enumerate() {
+                    let best_move = node.minimax_alphabeta(config, depth - 1, alpha, beta, false);
+                    max_score_move(best_move, &mut value, &node, index);
+
+                    alpha = max(alpha, value.score);
+
+                    if alpha >= beta {
+                        value.stat.cut_nodes += 1;
+                        break;
+                    }
+                }
+                self.value = value.score;
+                value
+            } else {
+                //penalty for losing
+                self.value = evaluation::evaluate(config.eval_fn, self) - PENALTY;
+                self.as_terminal_leaf()
+            }
+        } else {
+            let nodes = self.gen_next_nodes(config);
+            let mut value = BestMove::new(i32::max_value());
+
+            if let Some(ref mut vec) = nodes {
+                for (index, node) in vec.iter_mut().enumerate() {
+                    let best_move = node.minimax_alphabeta(config, depth - 1, alpha, beta, true);
+                    min_score_move(best_move, &mut value, &node, index);
+
+                    beta = min(beta, value.score);
+                    if alpha >= beta {
+                        value.stat.cut_nodes += 1;
+                        break;
+                    }
+                }
+                self.value = value.score;
+                value
+            } else {
+                //penalty for losing
+                self.value = evaluation::evaluate(config.eval_fn, self) + PENALTY;
+                self.as_terminal_leaf()
+            }
+        }
+    }
+
     pub(super) fn minimax(
         &mut self,
         config: &EngineConfig,
@@ -217,15 +283,13 @@ impl Node {
         }
 
         let mut closure = |initial, penalty, cmp_fn: fn(BestMove, &mut BestMove, &Node, usize)| {
-            self.minimax_part(&config, depth, !max_player, initial, penalty, cmp_fn)
+            self.minimax_part(config, depth, max_player, initial, penalty, cmp_fn)
         };
 
         if max_player {
-            closure(-1_000_000_000, -1_000_000, max_score_move)
+            closure(i32::min_value(), -PENALTY, max_score_move)
         } else {
-            //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
-            //penalty for losing
-            closure(1_000_000_000, 1_000_000, min_score_move)
+            closure(i32::max_value(), PENALTY, min_score_move)
         }
     }
 
@@ -236,14 +300,14 @@ impl Node {
         max_player: bool,
         initial: i32,
         penalty: i32,
-        mut cmp_fn: impl FnMut(BestMove, &mut BestMove, &Node, usize),
+        cmp_fn: fn(BestMove, &mut BestMove, &Node, usize),
     ) -> BestMove {
         let nodes = self.gen_next_nodes(config);
         let mut value = BestMove::new(initial);
 
         if let Some(ref mut vec) = nodes {
             for (index, node) in vec.iter_mut().enumerate() {
-                let best_move = node.minimax(config, depth - 1, max_player);
+                let best_move = node.minimax(config, depth - 1, !max_player);
                 cmp_fn(best_move, &mut value, &node, index);
             }
             self.value = value.score;
@@ -262,7 +326,7 @@ impl Node {
         }
 
         let nodes = self.gen_next_nodes(config);
-        let mut value = BestMove::new(-1_000_000_000);
+        let mut value = BestMove::new(i32::min_value());
 
         if let Some(ref mut vec) = nodes {
             for (index, node) in vec.iter_mut().enumerate() {
@@ -272,9 +336,45 @@ impl Node {
             self.value = value.score;
             value
         } else {
-            //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
             //penalty for losing
-            self.value = color as i32 * (evaluation::evaluate(config.eval_fn, self) - 1_000_000);
+            self.value = color as i32 * (evaluation::evaluate(config.eval_fn, self) - PENALTY);
+            self.as_terminal_leaf()
+        }
+    }
+
+    pub(super) fn negamax_alphabeta(
+        &mut self,
+        config: &EngineConfig,
+        depth: u16,
+        mut alpha: i32,
+        beta: i32,
+        color: i8,
+    ) -> BestMove {
+        if depth == 0 || self.board.state == State::Lose {
+            self.value = color as i32 * evaluation::evaluate(config.eval_fn, self);
+            return self.as_terminal_leaf();
+        }
+
+        let nodes = self.gen_next_nodes(config);
+        let mut value = BestMove::new(i32::min_value());
+
+        if let Some(ref mut vec) = nodes {
+            for (index, node) in vec.iter_mut().enumerate() {
+                debug_assert_ne!(beta, i32::min_value());
+                let best_move = -node.negamax_alphabeta(config, depth - 1, -beta, -alpha, -color);
+                max_score_move(best_move, &mut value, &node, index);
+
+                alpha = max(alpha, value.score);
+                if alpha >= beta {
+                    value.stat.cut_nodes += 1;
+                    break;
+                }
+            }
+            self.value = value.score;
+            value
+        } else {
+            //penalty for losing
+            self.value = color as i32 * (evaluation::evaluate(config.eval_fn, self) - PENALTY);
             self.as_terminal_leaf()
         }
     }
@@ -299,7 +399,7 @@ fn min_score_move(best_move: BestMove, current_value: &mut BestMove, node: &Node
             turn: node.turn,
             local_id: index as u8,
             score: best_move.score,
-            stat: best_move.stat,
+            stat: current_value.stat + best_move.stat,
         }
     } else {
         current_value.stat = current_value.stat + best_move.stat;

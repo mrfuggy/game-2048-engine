@@ -61,7 +61,10 @@ impl Node {
             turn: self.turn,
             local_id: 0,
             score: self.value,
-            stat: Statistics::default(),
+            stat: Statistics {
+                total_nodes: 1,
+                cut_nodes: 0,
+            },
         }
     }
 

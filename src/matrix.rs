@@ -87,6 +87,10 @@ pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     c
 }
 
+pub fn std_dev(_m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+    unimplemented!()
+}
+
 #[allow(dead_code)]
 /// Transpose the matrix
 pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
@@ -107,6 +111,31 @@ pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE / 2 {
         m.swap(j, BOARD_SIZE - 1 - j);
     }
+}
+
+#[allow(dead_code)]
+/// Convert to u64 id
+pub fn to_u64(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u64 {
+    let mut res: u64 = 0;
+    for i in 0..4 {
+        for j in 0..4 {
+            res = (res << 4) + m[j][i] as u64;
+        }
+    }
+    return res;
+}
+
+#[allow(dead_code)]
+/// Create array from u64
+fn from_u64(mut pos: u64) -> [[u8; 4]; 4] {
+    let mut m = [[0u8; 4]; 4];
+    for i in 0..4 {
+        for j in 0..4 {
+            m[j][i] = (pos & 0b1111) as u8;
+            pos = pos >> 4;
+        }
+    }
+    return m;
 }
 
 #[cfg(test)]

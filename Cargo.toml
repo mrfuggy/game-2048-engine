@@ -1,6 +1,6 @@
 [package]
 name = "game-2048-engine"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["fuggy <31143422+mrfuggy@users.noreply.github.com>"]
 edition = "2018"
 

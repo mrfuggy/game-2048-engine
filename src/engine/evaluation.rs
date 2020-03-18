@@ -20,25 +20,53 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 use crate::engine::node::Node;
 use crate::matrix;
 
+/// Normalized weights for evaluation functions (fraction)
+/// 0 - disable component of evaluation function
+/// Optimal overflow prevention range 0..397 (int32 / 6 / max score per compenent)
 #[derive(Clone, Copy)]
-pub enum EvaluationFunction {
-    MaxCell,
-    MaxScore,
-    Monotonicity,
-    Smoothness,
-    StdDev,
-    FreeSpace,
+pub struct Weights {
+    pub max_cell: i32,
+    pub max_score: i32,
+    pub monotonicity: i32,
+    pub smoothness: i32,
+    pub std_dev: i32,
+    pub free_space: i32,
 }
 
-pub(super) fn evaluate(eval_fn: EvaluationFunction, node: &Node) -> i32 {
-    match eval_fn {
-        EvaluationFunction::MaxCell => evaluation_max_cell(node),
-        EvaluationFunction::MaxScore => evaluation_max_score(node),
-        EvaluationFunction::Monotonicity => evaluation_monotonicity(node),
-        EvaluationFunction::Smoothness => evaluation_smoothness(node),
-        EvaluationFunction::StdDev => evaluation_std_dev(node),
-        EvaluationFunction::FreeSpace => evaluation_free_space(node),
+impl Weights {
+    pub fn normalize(mut self) -> Weights {
+        self.max_cell = self.max_cell * 13;
+        //baseline 900_000 score
+        //self.max_score = self.max_score * 1;
+        self.monotonicity = self.monotonicity * 112_500;
+        self.smoothness = self.smoothness * 2343;
+        self.std_dev = self.std_dev * 1;
+        self.free_space = self.free_space * 60000;
+        self
     }
+}
+
+pub(super) fn evaluate(weights: Weights, node: &Node) -> i32 {
+    let mut score = 0;
+    if weights.max_cell != 0 {
+        score += weights.max_cell * evaluation_max_cell(node);
+    }
+    if weights.max_score != 0 {
+        score += weights.max_score * evaluation_max_score(node);
+    }
+    if weights.monotonicity != 0 {
+        score += weights.monotonicity * evaluation_monotonicity(node);
+    }
+    if weights.smoothness != 0 {
+        score += weights.smoothness * evaluation_smoothness(node);
+    }
+    if weights.std_dev != 0 {
+        score += weights.std_dev * evaluation_std_dev(node);
+    }
+    if weights.free_space != 0 {
+        score += weights.free_space * evaluation_free_space(node);
+    }
+    score
 }
 
 /// range 0..65536 theory max 131072
@@ -46,7 +74,7 @@ fn evaluation_max_cell(node: &Node) -> i32 {
     node.board.max_cell() as i32
 }
 
-/// range 0..~1_000_000
+/// range 0..~1_000_000 effective to win 60_000
 fn evaluation_max_score(node: &Node) -> i32 {
     node.board.score as i32
 }
@@ -62,8 +90,8 @@ fn evaluation_smoothness(node: &Node) -> i32 {
     -matrix::smoothness(&node.board.board) + 384
 }
 
-fn evaluation_std_dev(_node: &Node) -> i32 {
-    unimplemented!()
+fn evaluation_std_dev(node: &Node) -> i32 {
+    matrix::std_dev(&node.board.board)
 }
 
 // range 0..15

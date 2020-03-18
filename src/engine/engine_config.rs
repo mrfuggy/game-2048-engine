@@ -17,11 +17,11 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use crate::engine::evaluation::EvaluationFunction;
+use crate::engine::evaluation::Weights;
 
 pub struct EngineConfig {
     pub depth: u16,
-    pub eval_fn: EvaluationFunction,
+    pub eval_fn: Weights,
     pub algorithm: Algorithm,
     pub random_mode: RandomCompleteness,
 }

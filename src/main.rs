@@ -21,19 +21,28 @@ use game_2048_engine::board::State;
 use game_2048_engine::direction::Direction;
 use game_2048_engine::engine::engine::Engine;
 use game_2048_engine::engine::engine_config::{Algorithm, EngineConfig, RandomCompleteness};
-use game_2048_engine::engine::evaluation::EvaluationFunction;
+use game_2048_engine::engine::evaluation::Weights;
 use game_2048_engine::engine::moves::Move;
 use game_2048_engine::game::Game;
 use game_2048_engine::input;
 use std::io;
 
 fn main() {
+    //let mut game = Game::with_seed(3);
     let mut game = Game::start_new();
+    let weights = Weights {
+        max_cell: 30,
+        max_score: 10,
+        monotonicity: 100,
+        smoothness: 50,
+        std_dev: 0,
+        free_space: 300,
+    };
     let engine_config = EngineConfig {
-        depth: 3,
-        eval_fn: EvaluationFunction::Monotonicity,
+        depth: 5,
+        eval_fn: weights.normalize(),
         algorithm: Algorithm::Negamax,
-        random_mode: RandomCompleteness::MonteCarlo(5),
+        random_mode: RandomCompleteness::MonteCarlo(10),
     };
     let mut engine = Engine::from_game(&game, engine_config);
     loop {

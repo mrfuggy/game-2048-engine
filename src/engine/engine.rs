@@ -56,6 +56,7 @@ impl Engine {
         }
 
         //TODO
+        println!("stat {:?}", best_move.stat);
         if let Move::Human(dir) = best_move.turn {
             dir
         } else {

@@ -96,7 +96,7 @@ fn evaluation_smoothness(node: &Node) -> i32 {
     -matrix::smoothness(&node.board.board) + 384
 }
 
-// range 0..~990_000
+// range 0..~912_000
 fn evaluation_std_dev(node: &Node) -> i32 {
     //negate this - less is better
     -matrix::std_dev(&node.board.board) + 1000

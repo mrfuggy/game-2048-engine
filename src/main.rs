@@ -42,7 +42,7 @@ fn main() {
     let engine_config = EngineConfig {
         depth: 5,
         eval_fn: weights.normalize(),
-        algorithm: Algorithm::Negamax,
+        algorithm: Algorithm::Minimax,
         random_mode: RandomCompleteness::MonteCarlo(10),
     };
     let mut engine = Engine::from_game(&game, engine_config);

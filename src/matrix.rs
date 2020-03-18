@@ -105,7 +105,6 @@ pub fn std_dev(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
             sd += (m[j][i] as f32 - avg) * (m[j][i] as f32 - avg);
         }
     }
-    println!("{:?}", sd);
     (sd.sqrt() * 29000.0) as i32
 }
 

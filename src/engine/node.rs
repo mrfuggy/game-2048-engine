@@ -216,39 +216,42 @@ impl Node {
             return self.as_terminal_leaf();
         }
 
+        let mut closure = |initial, penalty, cmp_fn: fn(BestMove, &mut BestMove, &Node, usize)| {
+            self.minimax_part(&config, depth, !max_player, initial, penalty, cmp_fn)
+        };
+
         if max_player {
-            let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(-1_000_000_000);
-
-            if let Some(ref mut vec) = nodes {
-                for (index, node) in vec.iter_mut().enumerate() {
-                    let best_move = node.minimax(config, depth - 1, false);
-                    max_score_move(best_move, &mut value, &node, index);
-                }
-                self.value = value.score;
-                value
-            } else {
-                //penalty for losing
-                self.value = evaluation::evaluate(config.eval_fn, self) - 1_000_000;
-                self.as_terminal_leaf()
-            }
+            closure(-1_000_000_000, -1_000_000, max_score_move)
         } else {
-            let nodes = self.gen_next_nodes(config);
-            let mut value = BestMove::new(1_000_000_000);
+            //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
+            //penalty for losing
+            closure(1_000_000_000, 1_000_000, min_score_move)
+        }
+    }
 
-            if let Some(ref mut vec) = nodes {
-                for (index, node) in vec.iter_mut().enumerate() {
-                    let best_move = node.minimax(config, depth - 1, true);
-                    min_score_move(best_move, &mut value, &node, index);
-                }
-                self.value = value.score;
-                value
-            } else {
-                //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
-                //penalty for losing
-                self.value = evaluation::evaluate(config.eval_fn, self) + 1_000_000;
-                self.as_terminal_leaf()
+    fn minimax_part(
+        &mut self,
+        config: &EngineConfig,
+        depth: u16,
+        max_player: bool,
+        initial: i32,
+        penalty: i32,
+        mut cmp_fn: impl FnMut(BestMove, &mut BestMove, &Node, usize),
+    ) -> BestMove {
+        let nodes = self.gen_next_nodes(config);
+        let mut value = BestMove::new(initial);
+
+        if let Some(ref mut vec) = nodes {
+            for (index, node) in vec.iter_mut().enumerate() {
+                let best_move = node.minimax(config, depth - 1, max_player);
+                cmp_fn(best_move, &mut value, &node, index);
             }
+            self.value = value.score;
+            value
+        } else {
+            //penalty for losing
+            self.value = evaluation::evaluate(config.eval_fn, self) + penalty;
+            self.as_terminal_leaf()
         }
     }
 

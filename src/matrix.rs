@@ -51,19 +51,26 @@ pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     let mut c = 0;
     //horizontally
     for j in 0..BOARD_SIZE {
-        let gt = (m[j][0] < m[j][1]) as u8 + (m[j][1] < m[j][2]) as u8 + (m[j][2] < m[j][3]) as u8;
-        let eq =
-            (m[j][0] == m[j][1]) as u8 + (m[j][1] == m[j][2]) as u8 + (m[j][2] == m[j][3]) as u8;
+        let mut gt = 0u8;
+        let mut eq = 0u8;
+        for i in 0..BOARD_SIZE - 1 {
+            gt += (m[j][i] < m[j][i + 1]) as u8;
+            eq += (m[j][i] == m[j][i + 1]) as u8;
+        }
 
         if gt + eq == 3 || gt + eq == 0 || gt == 0 {
             c += 1;
         }
     }
+
     //vertically
     for i in 0..BOARD_SIZE {
-        let gt = (m[0][i] < m[1][i]) as u8 + (m[1][i] < m[2][i]) as u8 + (m[2][i] < m[3][i]) as u8;
-        let eq =
-            (m[0][i] == m[1][i]) as u8 + (m[1][i] == m[2][i]) as u8 + (m[2][i] == m[3][i]) as u8;
+        let mut gt = 0u8;
+        let mut eq = 0u8;
+        for j in 0..BOARD_SIZE - 1 {
+            gt += (m[j][i] < m[j + 1][i]) as u8;
+            eq += (m[j][i] == m[j + 1][i]) as u8;
+        }
 
         if gt + eq == 3 || gt + eq == 0 || gt == 0 {
             c += 1;
@@ -130,7 +137,6 @@ pub fn snakeiness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     c
 }
 
-#[allow(dead_code)]
 /// Transpose the matrix
 pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
     for j in 0..BOARD_SIZE {
@@ -166,7 +172,7 @@ pub fn to_u64(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u64 {
 
 #[allow(dead_code)]
 /// Create array from u64
-fn from_u64(mut pos: u64) -> [[u8; BOARD_SIZE]; BOARD_SIZE] {
+pub fn from_u64(mut pos: u64) -> [[u8; BOARD_SIZE]; BOARD_SIZE] {
     let mut m = [[0u8; BOARD_SIZE]; BOARD_SIZE];
     for i in 0..BOARD_SIZE {
         for j in 0..BOARD_SIZE {
@@ -175,6 +181,36 @@ fn from_u64(mut pos: u64) -> [[u8; BOARD_SIZE]; BOARD_SIZE] {
         }
     }
     m
+}
+
+/// Convert to u16 id
+pub fn to_u16(m: [u8; BOARD_SIZE]) -> u16 {
+    let res: u16 =
+        ((m[0] as u16) << 12) + ((m[1] as u16) << 8) + ((m[2] as u16) << 4) + (m[3] as u16);
+    res
+}
+
+/// Create array from u16
+pub fn from_u16(m: &mut [u8; BOARD_SIZE], pos: u16) {
+    m[0] = ((pos & 0b1111_0000_0000_0000) >> 12) as u8;
+    m[1] = ((pos & 0b0000_1111_0000_0000) >> 8) as u8;
+    m[2] = ((pos & 0b0000_0000_1111_0000) >> 4) as u8;
+    m[3] = (pos & 0b0000_0000_0000_1111) as u8;
+}
+
+/// Convert to u16 id
+pub fn to_u16_rev(m: [u8; BOARD_SIZE]) -> u16 {
+    let res: u16 =
+        (m[0] as u16) + ((m[1] as u16) << 4) + ((m[2] as u16) << 8) + ((m[3] as u16) << 12);
+    res
+}
+
+/// Create array from u16
+pub fn from_u16_rev(m: &mut [u8; BOARD_SIZE], pos: u16) {
+    m[0] = (pos & 0b0000_0000_0000_1111) as u8;
+    m[1] = ((pos & 0b0000_0000_1111_0000) >> 4) as u8;
+    m[2] = ((pos & 0b0000_1111_0000_0000) >> 8) as u8;
+    m[3] = ((pos & 0b1111_0000_0000_0000) >> 12) as u8;
 }
 
 #[cfg(test)]

@@ -117,6 +117,7 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::board;
 
     #[test]
     #[rustfmt::skip]
@@ -156,6 +157,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_left_with_zero_start() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -170,6 +172,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_left_with_zero_end() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -184,6 +187,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_left_with_merge() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[3, 2, 1, 1],
@@ -198,6 +202,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_right_with_zero_start() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -212,6 +217,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_right_with_zero_end() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -226,6 +232,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_right_with_merge() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[3, 2, 1, 1],
@@ -240,6 +247,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_up_with_zero_start() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 0, 2],
@@ -254,6 +262,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_up_with_zero_end() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -268,6 +277,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_up_with_merge() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 3, 2, 3],
@@ -282,6 +292,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_down_with_zero_start() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -296,6 +307,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_down_with_zero_end() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 0, 2],
@@ -310,6 +322,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn should_slide_down_with_merge() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[1, 2, 1, 2],
@@ -323,7 +336,8 @@ mod tests {
 
     #[test]
     #[rustfmt::skip]
-    fn should_slide_down_with_merge2() { //TODO
+    fn should_slide_down_with_merge2() {
+        board::load_cache();
         let mut game = Game::start_new();
         game.board.board =
            [[3, 4, 2, 1],

@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use crate::cache::lazy::Lazy;
+use crate::cache::slide_cache::SlideCache;
 use crate::direction::Direction;
 use crate::matrix;
 
@@ -29,6 +31,15 @@ pub struct Board {
 }
 
 pub const BOARD_SIZE: usize = 4;
+static SLIDE_CACHE: Lazy<SlideCache> = Lazy::new(SlideCache::new());
+
+pub fn load_cache() {
+    SLIDE_CACHE.set(SlideCache::load_cache());
+}
+
+pub fn create_cache() {
+    SlideCache::create_cache();
+}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum State {
@@ -55,97 +66,47 @@ impl Board {
 
     /// Slide board to specific side
     pub fn slide_to(&mut self, dir: Direction) -> bool {
-        let mut moved = false;
-        for j in dir.get_range_j() {
-            for i in dir.get_range_i() {
-                //TODO extimate speed if extract line and find in cache
-                if dir.is_horizontal() {
-                    moved |= self.slide_h(dir, j, i);
-                } else {
-                    moved |= self.slide_v(dir, j, i);
-                }
+        let moved = match dir {
+            Direction::Left => self.slide_board(matrix::to_u16, matrix::from_u16),
+            Direction::Right => self.slide_board(matrix::to_u16_rev, matrix::from_u16_rev),
+            Direction::Up => {
+                matrix::transpose(&mut self.board);
+                let moved = self.slide_board(matrix::to_u16, matrix::from_u16);
+                matrix::transpose(&mut self.board);
+                moved
             }
-        }
+            Direction::Down => {
+                matrix::transpose(&mut self.board);
+                let moved = self.slide_board(matrix::to_u16_rev, matrix::from_u16_rev);
+                matrix::transpose(&mut self.board);
+                moved
+            }
+        };
 
-        // extra check when closing zeros
         if moved {
             self.move_count += 1;
         }
         moved
     }
 
-    /// Slide line horizontally in current point
-    fn slide_h(&mut self, dir: Direction, j: usize, i: usize) -> bool {
+    /// Slide board with cache get functions
+    fn slide_board(
+        &mut self,
+        encode_fn: fn([u8; BOARD_SIZE]) -> u16,
+        decode_fn: fn(&mut [u8; BOARD_SIZE], u16),
+    ) -> bool {
         let mut moved = false;
-
-        // move next non zero to current
-        if self.board[j][i] == 0 {
-            // from current to end of line
-            for k in dir.get_range_k(i) {
-                if self.board[j][k] != 0 {
-                    self.board[j][i] = self.board[j][k];
-                    self.board[j][k] = 0;
-                    moved = true;
-                    break;
-                }
-            }
-        }
-
-        // exit if rest are zeros
-        if self.board[j][i] == 0 {
-            return moved;
-        }
-
-        for k in dir.get_range_k(i) {
-            if self.board[j][i] == self.board[j][k] {
-                self.board[j][i] += 1;
-                self.board[j][k] = 0;
+        for j in 0..BOARD_SIZE {
+            let id = encode_fn(self.board[j]);
+            let item = SLIDE_CACHE.get().table[id as usize];
+            if item.line != 0 {
+                decode_fn(&mut self.board[j], item.line);
+                self.score += if item.score == 0 {
+                    0
+                } else {
+                    (item.score + 1) as u32
+                };
                 moved = true;
-                // add score
-                self.score += 1 << self.board[j][i];
-                // one merge per cell
-                break;
-            } else if self.board[j][k] != 0 {
-                break;
-            }
-        }
-
-        moved
-    }
-
-    /// Slide line vertically in current point
-    fn slide_v(&mut self, dir: Direction, j: usize, i: usize) -> bool {
-        let mut moved = false;
-
-        // move next non zero to current
-        if self.board[j][i] == 0 {
-            // from current to end of line
-            for k in dir.get_range_k(j) {
-                if self.board[k][i] != 0 {
-                    self.board[j][i] = self.board[k][i];
-                    self.board[k][i] = 0;
-                    moved = true;
-                    break;
-                }
-            }
-        }
-
-        // exit if rest are zeros
-        if self.board[j][i] == 0 {
-            return moved;
-        }
-
-        for k in dir.get_range_k(j) {
-            if self.board[j][i] == self.board[k][i] {
-                self.board[j][i] += 1;
-                self.board[k][i] = 0;
-                moved = true;
-                // add score
-                self.score += 1 << self.board[j][i];
-                // one merge per cell
-                break;
-            } else if self.board[k][i] != 0 {
-                break;
             }
         }
 

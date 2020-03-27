@@ -1,4 +1,4 @@
-/* lib.rs -- lib module.
+/* mod.rs -- cache module.
 Copyright (C) 2020 fuggy
 
 This file is part of game-2048-engine.
@@ -17,12 +17,5 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pub mod board;
-mod cache;
-pub mod direction;
-pub mod engine;
-pub mod game;
-pub mod input;
-mod matrix;
-mod output;
-mod random;
+pub mod lazy;
+pub mod slide_cache;

@@ -1,4 +1,4 @@
-/* lib.rs -- lib module.
+/* lazy.rs -- static lazy init once.
 Copyright (C) 2020 fuggy
 
 This file is part of game-2048-engine.
@@ -17,12 +17,29 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pub mod board;
-mod cache;
-pub mod direction;
-pub mod engine;
-pub mod game;
-pub mod input;
-mod matrix;
-mod output;
-mod random;
+use std::cell::UnsafeCell;
+
+pub struct Lazy<T> {
+    inner: UnsafeCell<T>,
+}
+
+unsafe impl<T> Sync for Lazy<T> {}
+
+impl<T> Lazy<T> {
+    /// Create initial value
+    pub const fn new(value: T) -> Self {
+        Lazy {
+            inner: UnsafeCell::new(value),
+        }
+    }
+
+    /// Set new value in runtime non-thread safe
+    pub fn set(&self, value: T) {
+        unsafe { *self.inner.get() = value }
+    }
+
+    pub fn get(&self) -> &T {
+        let raw_mut = self.inner.get();
+        unsafe { &*raw_mut }
+    }
+}

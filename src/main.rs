@@ -28,6 +28,9 @@ use game_2048_engine::input;
 use std::io;
 
 fn main() {
+    //load caches
+    game_2048_engine::board::load_cache();
+
     let mut game = Game::with_seed(3);
     //let mut game = Game::start_new();
     let weights = Weights {
@@ -73,8 +76,17 @@ fn main() {
 }
 
 #[allow(dead_code)]
+fn create_cache() {
+    game_2048_engine::board::create_cache();
+}
+
+#[allow(dead_code)]
 fn game() {
-    let mut game = Game::start_new();
+    //load caches
+    game_2048_engine::board::load_cache();
+
+    let mut game = Game::with_seed(3);
+    //let mut game = Game::start_new();
     loop {
         println!("{}", game);
         let mut input = String::new();

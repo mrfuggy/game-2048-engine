@@ -186,7 +186,7 @@ mod tests {
         match actual {
             Some(sl) => {
                 assert_eq!(sl.line, matrix::to_u16([2, 0, 0, 0]));
-                assert_eq!(sl.score, 4);
+                assert_eq!(sl.score, 4 - 1);
             }
             None => assert!(false),
         }
@@ -199,7 +199,7 @@ mod tests {
         match actual {
             Some(sl) => {
                 assert_eq!(sl.line, matrix::to_u16([2, 2, 0, 0]));
-                assert_eq!(sl.score, 8);
+                assert_eq!(sl.score, 8 - 1);
             }
             None => assert!(false),
         }
@@ -212,7 +212,7 @@ mod tests {
         match actual {
             Some(sl) => {
                 assert_eq!(sl.line, matrix::to_u16([3, 2, 0, 0]));
-                assert_eq!(sl.score, 12);
+                assert_eq!(sl.score, 12 - 1);
             }
             None => assert!(false),
         }
@@ -253,7 +253,7 @@ mod tests {
         let cache = SlideCache::load_cache();
         let actual = cache.table[matrix::to_u16([2, 2, 1, 1]) as usize];
         assert_eq!(actual.line, matrix::to_u16([3, 2, 0, 0]));
-        assert_eq!(actual.score, 12);
+        assert_eq!(actual.score, 12 - 1);
     }
 
     #[test]

@@ -29,6 +29,7 @@ use crate::random;
 use crate::random::RndMove;
 use std::cmp::max;
 use std::cmp::min;
+use std::cmp::Ordering;
 use std::mem::take;
 
 const BOARD_SIZE: usize = 4;
@@ -37,9 +38,29 @@ const BOARD_SIZE: usize = 4;
 pub(super) struct Node {
     pub(super) board: Board,
     turn: Move,
-    value: i32,
+    pub(super) value: i32,
     pub(super) children: Option<Vec<Node>>,
 }
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.value.cmp(&self.value)
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl Eq for Node {}
 
 //TODO estimate the possibility of cutting a node with non full filling or alpha-beta
 const PENALTY: i32 = 1_000_000;
@@ -93,12 +114,19 @@ impl Node {
 
     fn gen_next_nodes(&mut self, config: &EngineConfig) -> &mut Option<Vec<Node>> {
         if self.children.is_none() {
-            let nodes = if self.turn.is_human() {
+            let mut nodes = if self.turn.is_human() {
                 self.next_random_moves(config)
             } else {
                 self.next_human_moves()
             };
+
             if !nodes.is_empty() {
+                if config.order_moves {
+                    for node in nodes.iter_mut() {
+                        node.value = evaluation::evaluate(config.eval_fn, &node);
+                    }
+                    nodes.sort();
+                }
                 self.children = Some(nodes);
             } else {
                 self.children = None;

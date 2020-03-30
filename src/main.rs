@@ -49,6 +49,7 @@ fn main() {
         //algorithm: Algorithm::MinimaxAlphaBeta,
         random_mode: RandomCompleteness::Full,
         //random_mode: RandomCompleteness::MonteCarlo(10),
+        order_moves: true,
     };
     let mut engine = Engine::from_game(&game, engine_config);
     loop {

@@ -24,6 +24,7 @@ pub struct EngineConfig {
     pub eval_fn: Weights,
     pub algorithm: Algorithm,
     pub random_mode: RandomCompleteness,
+    pub order_moves: bool,
 }
 
 pub enum RandomCompleteness {

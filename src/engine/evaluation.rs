@@ -50,6 +50,11 @@ impl Weights {
 }
 
 pub(super) fn evaluate(weights: Weights, node: &Node) -> i32 {
+    // TODO in ordered moves, after replace with cache
+    if node.value != 0 {
+        return node.value;
+    }
+
     let mut score = 0;
     if weights.max_cell != 0 {
         score += weights.max_cell * evaluation_max_cell(node);

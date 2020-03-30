@@ -48,7 +48,7 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
 
 /// Sum of absolute value of the difference between pairs
 pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
-    let mut c = 0;
+    let mut c = 0u8;
     //horizontally
     for j in 0..BOARD_SIZE {
         let mut gt = 0u8;
@@ -58,9 +58,8 @@ pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
             eq += (m[j][i] == m[j][i + 1]) as u8;
         }
 
-        if gt + eq == 3 || gt + eq == 0 || gt == 0 {
-            c += 1;
-        }
+        //sum == 3 or sum == 0 or qt = 0
+        c += (((gt + eq) ^ 3) == 0 || gt == 0) as u8;
     }
 
     //vertically
@@ -72,29 +71,35 @@ pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
             eq += (m[j][i] == m[j + 1][i]) as u8;
         }
 
-        if gt + eq == 3 || gt + eq == 0 || gt == 0 {
-            c += 1;
-        }
+        //sum == 3 or sum == 0 or qt = 0
+        c += (((gt + eq) ^ 3) == 0 || gt == 0) as u8;
     }
-    c
+    c as i32
 }
 
 /// Sum of absolute value of the difference between pairs
 pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
-    let mut c = 0i32;
+    let mut c = 0i16;
     //horizontally
     for j in 0..BOARD_SIZE {
         for i in 0..BOARD_SIZE - 1 {
-            c += (m[j][i] as i32 - m[j][i + 1] as i32).abs();
+            //abs bit hack
+            let a: i8 = m[j][i] as i8 - m[j][i + 1] as i8;
+            let mask = a >> 7;
+            c += ((a + mask) ^ mask) as i16;
         }
     }
+
     //vertically
     for j in 0..BOARD_SIZE - 1 {
         for i in 0..BOARD_SIZE {
-            c += (m[j][i] as i32 - m[j + 1][i] as i32).abs();
+            //abs bit hack
+            let a: i8 = m[j][i] as i8 - m[j + 1][i] as i8;
+            let mask = a >> 7;
+            c += ((a + mask) ^ mask) as i16;
         }
     }
-    c
+    c as i32
 }
 
 pub fn std_dev(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {

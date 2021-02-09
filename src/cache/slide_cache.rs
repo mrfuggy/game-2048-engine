@@ -1,5 +1,5 @@
 /* slide_cache.rs -- save/load cache slide lines.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -223,7 +223,10 @@ mod tests {
         let a = [2, 0, 0, 0];
         let actual = slide_array(a);
         match actual {
-            Some(sl) => assert!(false),
+            Some(sl) => {
+                assert_eq!(sl.line, matrix::to_u16([2, 0, 0, 0]));
+                assert_eq!(sl.score, 0);
+            }
             None => assert!(true),
         }
     }

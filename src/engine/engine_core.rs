@@ -1,5 +1,5 @@
-/* engine.rs -- engine manager.
-Copyright (C) 2020 fuggy
+/* engine_core.rs -- engine manager.
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -23,8 +23,6 @@ use crate::engine::engine_config::EngineConfig;
 use crate::engine::moves::Move;
 use crate::engine::node::Node;
 use crate::game::Game;
-use std::mem::replace;
-use std::mem::take;
 
 pub struct Engine {
     pub(super) root: Node,
@@ -63,8 +61,7 @@ impl Engine {
 
         //best_turn
         if let Some(ref mut vec) = self.root.children {
-            let next_move = take(&mut vec[best_move.local_id as usize]);
-            replace(&mut self.root, next_move);
+            self.root = vec.swap_remove(best_move.local_id as usize);
         }
 
         //TODO

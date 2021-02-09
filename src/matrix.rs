@@ -1,5 +1,5 @@
 /* matrix.rs -- matrix utils operations.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -19,25 +19,27 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::board::BOARD_SIZE;
 
+type Matrix = [[u8; BOARD_SIZE]; BOARD_SIZE];
+
 /// Max cell value
-pub fn max_cell(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
-    let mut c = 0u8;
-    for j in 0..BOARD_SIZE {
-        for i in 0..BOARD_SIZE {
-            if m[j][i] > c {
-                c = m[j][i];
+pub fn max_cell(m: &Matrix) -> u8 {
+    let mut max = 0u8;
+    for row in m {
+        for cell in row {
+            if *cell > max {
+                max = *cell;
             }
         }
     }
-    c
+    max
 }
 
 /// Count the number of empty cells
-pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
+pub fn empty_count(m: &Matrix) -> u8 {
     let mut c = 0u8;
-    for j in 0..BOARD_SIZE {
-        for i in 0..BOARD_SIZE {
-            c += (m[j][i] == 0) as u8;
+    for row in m {
+        for cell in row {
+            c += (*cell == 0) as u8;
         }
     }
     c
@@ -47,15 +49,15 @@ pub fn empty_count(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u8 {
 //fn vec_multiply()
 
 /// Sum of absolute value of the difference between pairs
-pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+pub fn monotonicity(m: &Matrix) -> i32 {
     let mut c = 0u8;
     //horizontally
-    for j in 0..BOARD_SIZE {
+    for row in m {
         let mut gt = 0u8;
         let mut eq = 0u8;
         for i in 0..BOARD_SIZE - 1 {
-            gt += (m[j][i] < m[j][i + 1]) as u8;
-            eq += (m[j][i] == m[j][i + 1]) as u8;
+            gt += (row[i] < row[i + 1]) as u8;
+            eq += (row[i] == row[i + 1]) as u8;
         }
 
         //sum == 3 or sum == 0 or qt = 0
@@ -78,13 +80,13 @@ pub fn monotonicity(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
 }
 
 /// Sum of absolute value of the difference between pairs
-pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+pub fn smoothness(m: &Matrix) -> i32 {
     let mut c = 0i16;
     //horizontally
-    for j in 0..BOARD_SIZE {
+    for row in m {
         for i in 0..BOARD_SIZE - 1 {
             //abs bit hack
-            let a: i8 = m[j][i] as i8 - m[j][i + 1] as i8;
+            let a: i8 = row[i] as i8 - row[i + 1] as i8;
             let mask = a >> 7;
             c += ((a + mask) ^ mask) as i16;
         }
@@ -102,19 +104,20 @@ pub fn smoothness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
     c as i32
 }
 
-pub fn std_dev(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
+pub fn std_dev(m: &Matrix) -> i32 {
     let mut c = 0u8;
-    for j in 0..BOARD_SIZE {
-        for i in 0..BOARD_SIZE {
-            c += m[j][i];
+    for row in m {
+        for cell in row {
+            c += *cell;
         }
     }
     let avg = c as f32 / 16.0;
 
     let mut sd = 0f32;
-    for j in 0..BOARD_SIZE {
-        for i in 0..BOARD_SIZE {
-            sd += (m[j][i] as f32 - avg) * (m[j][i] as f32 - avg);
+    for row in m {
+        for cell in row {
+            let x = *cell as f32 - avg;
+            sd += x * x;
         }
     }
     (sd.sqrt() * 29000.0) as i32
@@ -127,23 +130,21 @@ const SNAKE_COEFFICIENTS: [[i32; BOARD_SIZE]; BOARD_SIZE] = [
     [2, 3, 5, 10],
 ];
 
-pub fn snakeiness(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> i32 {
-    //let res = [[0u8; BOARD_SIZE]; BOARD_SIZE];
+pub fn snakeiness(m: &Matrix) -> i32 {
     let mut c = 0i32;
-    for j in 0..BOARD_SIZE {
-        for i in 0..BOARD_SIZE {
-            //res[j][i]
-            c += m[i][0] as i32 * SNAKE_COEFFICIENTS[j][0]
-                + m[i][1] as i32 * SNAKE_COEFFICIENTS[j][1]
-                + m[i][2] as i32 * SNAKE_COEFFICIENTS[j][2]
-                + m[i][3] as i32 * SNAKE_COEFFICIENTS[j][3];
+    for snake_row in SNAKE_COEFFICIENTS.iter() {
+        for row in m {
+            c += row
+                .iter()
+                .zip(snake_row.iter())
+                .fold(0i32, |acc, (&a, &b)| acc + a as i32 * b);
         }
     }
     c
 }
 
 /// Transpose the matrix
-pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
+pub fn transpose(m: &mut Matrix) {
     for j in 0..BOARD_SIZE {
         for i in 0..BOARD_SIZE {
             if i > j {
@@ -157,7 +158,7 @@ pub fn transpose(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
 
 #[allow(dead_code)]
 /// Mirror a matrix horizontally
-pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
+pub fn mirror_h(m: &mut Matrix) {
     for j in 0..BOARD_SIZE / 2 {
         m.swap(j, BOARD_SIZE - 1 - j);
     }
@@ -165,11 +166,11 @@ pub fn mirror_h(m: &mut [[u8; BOARD_SIZE]; BOARD_SIZE]) {
 
 #[allow(dead_code)]
 /// Convert to u64 id
-pub fn to_u64(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u64 {
+pub fn to_u64(m: &Matrix) -> u64 {
     let mut res: u64 = 0;
-    for i in 0..BOARD_SIZE {
-        for j in 0..BOARD_SIZE {
-            res = (res << 4) + m[j][i] as u64;
+    for row in m {
+        for cell in row {
+            res = (res << 4) + *cell as u64;
         }
     }
     res
@@ -177,12 +178,12 @@ pub fn to_u64(m: &[[u8; BOARD_SIZE]; BOARD_SIZE]) -> u64 {
 
 #[allow(dead_code)]
 /// Create array from u64
-pub fn from_u64(mut pos: u64) -> [[u8; BOARD_SIZE]; BOARD_SIZE] {
+pub fn from_u64(mut pos: u64) -> Matrix {
     let mut m = [[0u8; BOARD_SIZE]; BOARD_SIZE];
-    for i in 0..BOARD_SIZE {
-        for j in 0..BOARD_SIZE {
-            m[j][i] = (pos & 0b1111) as u8;
-            pos = pos >> 4;
+    for row in m.iter_mut() {
+        for cell in row.iter_mut() {
+            *cell = (pos & 0b1111) as u8;
+            pos >>= 4;
         }
     }
     m

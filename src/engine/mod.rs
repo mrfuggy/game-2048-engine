@@ -1,5 +1,5 @@
 /* mod.rs -- engine module.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pub mod engine;
 pub mod engine_config;
+pub mod engine_core;
 pub mod evaluation;
 pub mod moves;
 pub mod node;

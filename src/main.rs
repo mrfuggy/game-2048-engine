@@ -1,5 +1,5 @@
 /* main.rs -- run game or engine lib.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -19,8 +19,8 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 
 use game_2048_engine::board::State;
 use game_2048_engine::direction::Direction;
-use game_2048_engine::engine::engine::Engine;
 use game_2048_engine::engine::engine_config::{Algorithm, EngineConfig, RandomCompleteness};
+use game_2048_engine::engine::engine_core::Engine;
 use game_2048_engine::engine::evaluation::Weights;
 use game_2048_engine::engine::moves::Move;
 use game_2048_engine::game::Game;
@@ -97,7 +97,7 @@ fn game() {
             .expect("Failed to read line");
 
         if input.len() > 1 {
-            let dir = input::parse_input(input.chars().nth(0).unwrap());
+            let dir = input::parse_input(input.chars().next().unwrap());
             print!("\r");
             if let Some(value) = dir {
                 game.make_move(value);

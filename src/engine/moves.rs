@@ -1,5 +1,5 @@
 /* moves.rs -- move struct.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -18,7 +18,7 @@ along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 use crate::direction::Direction;
-use std::ops::Add;
+use std::collections::HashMap;
 use std::ops::Neg;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -84,18 +84,57 @@ impl Neg for BestMove {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub(super) struct Statistics {
-    pub(super) total_nodes: u32,
-    pub(super) cut_nodes: u32,
+#[derive(Debug, Clone, Default)]
+pub struct Statistics {
+    pub total_nodes: u32,
+    pub cut_nodes: u32,
+    pub cache_hit: HashMap<u64, u32>,
 }
 
-impl Add for Statistics {
-    type Output = Self;
-    fn add(self, other: Self) -> Self::Output {
-        Statistics {
-            total_nodes: self.total_nodes + other.total_nodes,
-            cut_nodes: self.cut_nodes + other.cut_nodes,
+impl Statistics {
+    pub fn new(board_id: u64) -> Statistics {
+        let mut stat = Statistics {
+            total_nodes: 1,
+            cut_nodes: 0,
+            cache_hit: HashMap::new(),
+        };
+        stat.cache_hit.insert(board_id, 1);
+        stat
+    }
+
+    fn merge_maps(map: &mut HashMap<u64, u32>, other: &HashMap<u64, u32>) {
+        for (k, v) in other {
+            map.entry(*k).and_modify(|x| *x += *v).or_insert(*v);
         }
+    }
+
+    pub fn add(&mut self, other: &Statistics) {
+        self.total_nodes += other.total_nodes;
+        self.cut_nodes += other.cut_nodes;
+        Statistics::merge_maps(&mut self.cache_hit, &other.cache_hit);
+    }
+
+    pub fn print_cache_stat(&self) {
+        let mut cache_stat_vec: Vec<u32> = self.cache_hit.iter().map(|(_k, v)| *v).collect();
+        cache_stat_vec.sort();
+        cache_stat_vec.reverse();
+        let total_len = cache_stat_vec.len();
+        let total_sum: u32 = cache_stat_vec.iter().sum();
+        cache_stat_vec.truncate(10); //just top 10. historgam is better
+        let mut top = cache_stat_vec[0];
+        let mut c = 0;
+        let mut _sum = 0;
+        for value in cache_stat_vec {
+            _sum += value;
+            if value == top {
+                c += 1;
+            } else {
+                println!("count {:?}={:?} value", top, c);
+                c = 1;
+                top = value;
+            }
+        }
+        println!("count {:?}={:?} value", top, c);
+        println!("total {:?}={:?} values", total_sum, total_len);
     }
 }

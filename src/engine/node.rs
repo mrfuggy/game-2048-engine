@@ -1,5 +1,5 @@
 /* node.rs -- minimax tree node.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -82,15 +82,13 @@ impl Node {
         }
     }
 
+    /// Terminal case of recursion
     fn as_terminal_leaf(&self) -> BestMove {
         BestMove {
             turn: self.turn,
             local_id: 0,
             score: self.value,
-            stat: Statistics {
-                total_nodes: 1,
-                cut_nodes: 0,
-            },
+            stat: Statistics::new(self.board.get_board_id()),
         }
     }
 
@@ -123,6 +121,7 @@ impl Node {
             if !nodes.is_empty() {
                 if config.order_moves {
                     for node in nodes.iter_mut() {
+                        //unfortunately cache hits are not counted here
                         node.value = evaluation::evaluate(config.eval_fn, &node);
                     }
                     nodes.sort();
@@ -408,28 +407,40 @@ impl Node {
     }
 }
 
-fn max_score_move(best_move: BestMove, current_value: &mut BestMove, node: &Node, index: usize) {
+fn max_score_move(
+    mut best_move: BestMove,
+    current_value: &mut BestMove,
+    node: &Node,
+    index: usize,
+) {
     if best_move.score > current_value.score {
+        best_move.stat.add(&current_value.stat);
         *current_value = BestMove {
             turn: node.turn,
             local_id: index as u8,
             score: best_move.score,
-            stat: current_value.stat + best_move.stat,
+            stat: best_move.stat,
         }
     } else {
-        current_value.stat = current_value.stat + best_move.stat;
+        current_value.stat.add(&best_move.stat);
     }
 }
 
-fn min_score_move(best_move: BestMove, current_value: &mut BestMove, node: &Node, index: usize) {
+fn min_score_move(
+    mut best_move: BestMove,
+    current_value: &mut BestMove,
+    node: &Node,
+    index: usize,
+) {
     if best_move.score < current_value.score {
+        best_move.stat.add(&current_value.stat);
         *current_value = BestMove {
             turn: node.turn,
             local_id: index as u8,
             score: best_move.score,
-            stat: current_value.stat + best_move.stat,
+            stat: best_move.stat,
         }
     } else {
-        current_value.stat = current_value.stat + best_move.stat;
+        current_value.stat.add(&best_move.stat);
     }
 }

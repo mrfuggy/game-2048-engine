@@ -65,7 +65,13 @@ impl Engine {
         }
 
         //TODO
-        println!("stat {:?}", best_move.stat);
+        println!(
+            "stat Statistics {{ total_nodes: {:?}, cut_nodes: {:?}, uniq_nodes: {:?} }}",
+            best_move.stat.total_nodes,
+            best_move.stat.cut_nodes,
+            best_move.stat.cache_hit.len()
+        );
+        best_move.stat.print_cache_stat();
         if let Move::Human(dir) = best_move.turn {
             dir
         } else {

@@ -30,6 +30,8 @@ pub struct SlideCache {
     pub table: [SlideLine; 65536],
 }
 
+const ACTUAL_SIZE: usize = 20443;
+
 #[derive(Debug, Clone, Copy)]
 pub struct SlideLine {
     /// output array
@@ -81,7 +83,7 @@ impl SlideCache {
         let mut delta = 0;
         for i in 0..self.table.len() {
             if self.table[i].line != 0 {
-                buf[0] = (i - delta) as u8;
+                buf[0] = (i - delta) as u8; //delta encoding
                 delta = i;
                 let score = self.table[i].score;
                 /*let score = if self.table[i].score == 0 {
@@ -105,7 +107,7 @@ impl SlideCache {
         let mut file = BufReader::new(File::open("slide-cache.bin")?);
         let mut buf: [u8; 5] = [0u8; 5];
         let mut delta = 0usize;
-        for _i in 0..20443 {
+        for _i in 0..ACTUAL_SIZE {
             file.read_exact(&mut buf)?;
             delta += buf[0] as usize;
             let line = ((buf[1] as u16) << 8) + buf[2] as u16;
@@ -273,6 +275,6 @@ mod tests {
     fn deserialize_size_bytes() {
         let cache = SlideCache::load_cache();
         let actual = cache.table.iter().filter(|x| x.line != 0).count();
-        assert_eq!(actual, 20443);
+        assert_eq!(actual, ACTUAL_SIZE);
     }
 }

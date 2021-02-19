@@ -1,5 +1,5 @@
 /* evaluation.rs -- evaluation functions.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -35,6 +35,7 @@ pub struct Weights {
 }
 
 impl Weights {
+    /// Normalizing components to scale
     pub fn normalize(mut self) -> Weights {
         self.max_cell *= 14;
         //baseline 900_000 score

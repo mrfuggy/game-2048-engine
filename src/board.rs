@@ -1,5 +1,5 @@
 /* board.rs -- common board actions.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -160,5 +160,10 @@ impl Board {
     /// Count the number of empty cells
     pub fn max_cell(&self) -> u16 {
         1 << matrix::max_cell(&self.board)
+    }
+
+    // Get board as u64 value
+    pub fn get_board_id(&self) -> u64 {
+        matrix::to_u64(&self.board)
     }
 }

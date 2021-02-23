@@ -1,5 +1,5 @@
 /* random.rs -- make random number.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -52,7 +52,7 @@ pub(super) fn get_rnd() -> Rnd {
 }
 
 impl Rnd {
-    pub(super) fn new() -> Rnd {
+    pub(super) fn new() -> Self {
         let start = SystemTime::now();
         let now = start.duration_since(UNIX_EPOCH);
         Rnd {
@@ -60,7 +60,7 @@ impl Rnd {
         }
     }
 
-    pub(super) fn with_seed(seed: u32) -> Rnd {
+    pub(super) fn with_seed(seed: u32) -> Self {
         Rnd {
             seed: seed as u32 % MODULUS,
         }

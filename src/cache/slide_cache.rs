@@ -31,6 +31,7 @@ pub struct SlideCache {
 }
 
 const ACTUAL_SIZE: usize = 20443;
+const FILE: &str = "slide-cache.bin";
 
 #[derive(Debug, Clone, Copy)]
 pub struct SlideLine {
@@ -66,19 +67,23 @@ impl SlideCache {
                 }
             }
         }
-        cache.serialize().expect("cannot write file");
+        cache
+            .serialize()
+            .expect(concat!("cannot write file ", "slide-cache.bin"));
     }
 
     /// Load cache from file
     pub fn load_cache() -> Self {
         let mut cache = SlideCache::new();
-        cache.deserialize().expect("cannot read file");
+        cache
+            .deserialize()
+            .expect(concat!("cannot read file ", "slide-cache.bin"));
         cache
     }
 
     /// Write array to file
     fn serialize(&self) -> Result<()> {
-        let mut file = BufWriter::new(File::create("slide-cache.bin")?);
+        let mut file = BufWriter::new(File::create(FILE)?);
         let mut buf: [u8; 5] = [0u8; 5];
         let mut delta = 0;
         for i in 0..self.table.len() {
@@ -104,7 +109,7 @@ impl SlideCache {
 
     /// Read cache from file
     fn deserialize(&mut self) -> Result<()> {
-        let mut file = BufReader::new(File::open("slide-cache.bin")?);
+        let mut file = BufReader::new(File::open(FILE)?);
         let mut buf: [u8; 5] = [0u8; 5];
         let mut delta = 0usize;
         for _i in 0..ACTUAL_SIZE {

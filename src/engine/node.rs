@@ -73,7 +73,7 @@ const DIRICTION_CYCLE: [Direction; 4] = [
 ];
 
 impl Node {
-    pub(super) fn with_board(new_board: Board, turn: Move) -> Node {
+    pub(super) fn with_board(new_board: Board, turn: Move) -> Self {
         Node {
             board: new_board,
             turn,

@@ -1,5 +1,5 @@
 /* input.rs -- input direction from console.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -25,6 +25,11 @@ pub fn parse_input(ch: char) -> Option<Direction> {
         'a' => Some(Direction::Left),
         's' => Some(Direction::Down),
         'd' => Some(Direction::Right),
+
+        'k' => Some(Direction::Up),
+        'j' => Some(Direction::Left),
+        'h' => Some(Direction::Down),
+        'l' => Some(Direction::Right),
 
         '↑' => Some(Direction::Up),
         '←' => Some(Direction::Left),

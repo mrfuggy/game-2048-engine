@@ -61,6 +61,7 @@ pub fn monotonicity(m: &Matrix) -> i32 {
         }
 
         //sum == 3 or sum == 0 or qt = 0
+        //3 increases or 3 decreases or 3 equal
         c += (((gt + eq) ^ 3) == 0 || gt == 0) as u8;
     }
 
@@ -74,6 +75,7 @@ pub fn monotonicity(m: &Matrix) -> i32 {
         }
 
         //sum == 3 or sum == 0 or qt = 0
+        //3 increases or 3 decreases or 3 equal
         c += (((gt + eq) ^ 3) == 0 || gt == 0) as u8;
     }
     c as i32
@@ -85,7 +87,7 @@ pub fn smoothness(m: &Matrix) -> i32 {
     //horizontally
     for row in m {
         for i in 0..BOARD_SIZE - 1 {
-            //abs bit hack
+            //abs bit hack =abs(a)
             let a: i8 = row[i] as i8 - row[i + 1] as i8;
             let mask = a >> 7;
             c += ((a + mask) ^ mask) as i16;
@@ -95,7 +97,7 @@ pub fn smoothness(m: &Matrix) -> i32 {
     //vertically
     for j in 0..BOARD_SIZE - 1 {
         for i in 0..BOARD_SIZE {
-            //abs bit hack
+            //abs bit hack =abs(a)
             let a: i8 = m[j][i] as i8 - m[j + 1][i] as i8;
             let mask = a >> 7;
             c += ((a + mask) ^ mask) as i16;

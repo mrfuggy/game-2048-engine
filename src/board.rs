@@ -48,14 +48,14 @@ pub enum State {
 }
 
 impl Default for State {
-    fn default() -> State {
+    fn default() -> Self {
         State::InGame
     }
 }
 
 impl Board {
     /// Create Empty Board
-    pub fn new() -> Board {
+    pub fn new() -> Self {
         Board {
             board: [[0u8; BOARD_SIZE]; BOARD_SIZE],
             state: State::InGame,

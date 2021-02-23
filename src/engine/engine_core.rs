@@ -30,7 +30,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn from_game(game: &Game, config: EngineConfig) -> Engine {
+    pub fn from_game(game: &Game, config: EngineConfig) -> Self {
         Engine {
             root: Node::with_board(game.board, Move::default()),
             config,

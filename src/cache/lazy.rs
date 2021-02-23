@@ -1,5 +1,5 @@
 /* lazy.rs -- static lazy init once.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -39,7 +39,7 @@ impl<T> Lazy<T> {
     }
 
     pub fn get(&self) -> &T {
-        let raw_mut = self.inner.get();
-        unsafe { &*raw_mut }
+        let raw_ref = self.inner.get();
+        unsafe { &*raw_ref }
     }
 }

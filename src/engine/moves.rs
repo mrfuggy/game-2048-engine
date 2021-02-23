@@ -28,7 +28,7 @@ pub enum Move {
 }
 
 impl Move {
-    pub(super) fn from_tuple(tuple: (u8, u8)) -> Move {
+    pub(super) fn from_tuple(tuple: (u8, u8)) -> Self {
         let (value, pos) = tuple;
         Move::Random(value, pos)
     }
@@ -49,7 +49,7 @@ impl Move {
 }
 
 impl Default for Move {
-    fn default() -> Move {
+    fn default() -> Self {
         Move::Random(0, 0)
     }
 }
@@ -63,7 +63,7 @@ pub struct BestMove {
 }
 
 impl BestMove {
-    pub(super) fn new(score: i32) -> BestMove {
+    pub(super) fn new(score: i32) -> Self {
         const EMPTY: Move = Move::Random(0, 0);
         BestMove {
             turn: EMPTY,
@@ -92,7 +92,7 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    pub fn new(board_id: u64) -> Statistics {
+    pub fn new(board_id: u64) -> Self {
         let mut stat = Statistics {
             total_nodes: 1,
             cut_nodes: 0,
@@ -116,7 +116,7 @@ impl Statistics {
 
     pub fn print_cache_stat(&self) {
         let mut cache_stat_vec: Vec<u32> = self.cache_hit.iter().map(|(_k, v)| *v).collect();
-        cache_stat_vec.sort();
+        cache_stat_vec.sort_unstable();
         cache_stat_vec.reverse();
         let total_len = cache_stat_vec.len();
         let total_sum: u32 = cache_stat_vec.iter().sum();

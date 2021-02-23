@@ -1,5 +1,5 @@
 /* game.rs -- manage the game process.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -30,7 +30,7 @@ pub struct Game {
 
 impl Game {
     /// Create new start position defined by seed
-    pub fn with_seed(seed: u32) -> Game {
+    pub fn with_seed(seed: u32) -> Self {
         let mut start_position = Game {
             board: Board::new(),
             rnd: Rnd::with_seed(seed),
@@ -41,7 +41,7 @@ impl Game {
     }
 
     /// Create new start position
-    pub fn start_new() -> Game {
+    pub fn start_new() -> Self {
         let mut start_position = Game {
             board: Board::new(),
             rnd: random::get_rnd(),

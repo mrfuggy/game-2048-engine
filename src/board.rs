@@ -24,7 +24,7 @@ use crate::matrix;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Board {
-    pub board: [[u8; BOARD_SIZE]; BOARD_SIZE],
+    pub(super) board: [[u8; BOARD_SIZE]; BOARD_SIZE],
     pub state: State,
     pub score: u32,
     pub move_count: u16,
@@ -157,12 +157,12 @@ impl Board {
         matrix::empty_count(&self.board)
     }
 
-    /// Count the number of empty cells
+    /// The value of the maximum cell
     pub fn max_cell(&self) -> u16 {
         1 << matrix::max_cell(&self.board)
     }
 
-    // Get board as u64 value
+    /// Get board as u64 value
     pub fn get_board_id(&self) -> u64 {
         matrix::to_u64(&self.board)
     }

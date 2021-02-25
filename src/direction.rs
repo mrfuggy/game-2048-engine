@@ -1,5 +1,5 @@
 /* direction.rs -- direction of move.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -16,6 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with game-2048-engine.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+use core::convert::TryFrom;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Direction {
@@ -43,4 +45,28 @@ impl Direction {
     // Right     = ↓ ← ↤
     // Up        = ↓ → ↧
     // Down      = ↑ → ↥
+}
+
+impl TryFrom<char> for Direction {
+    type Error = ();
+    fn try_from(ch: char) -> Result<Self, Self::Error> {
+        match ch {
+            'w' => Ok(Direction::Up),
+            'a' => Ok(Direction::Left),
+            's' => Ok(Direction::Down),
+            'd' => Ok(Direction::Right),
+
+            'k' => Ok(Direction::Up),
+            'j' => Ok(Direction::Left),
+            'h' => Ok(Direction::Down),
+            'l' => Ok(Direction::Right),
+
+            '↑' => Ok(Direction::Up),
+            '←' => Ok(Direction::Left),
+            '↓' => Ok(Direction::Down),
+            '→' => Ok(Direction::Right),
+
+            _ => Err(()),
+        }
+    }
 }

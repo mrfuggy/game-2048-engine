@@ -24,7 +24,8 @@ use game_2048_engine::engine::engine_core::Engine;
 use game_2048_engine::engine::evaluation::Weights;
 use game_2048_engine::engine::moves::Move;
 use game_2048_engine::game::Game;
-use game_2048_engine::input;
+use game_2048_engine::getopt;
+use std::convert::TryInto;
 use std::io;
 
 fn main() {
@@ -97,9 +98,9 @@ fn game() {
             .expect("Failed to read line");
 
         if input.len() > 1 {
-            let dir = input::parse_input(input.chars().next().unwrap());
+            let dir = input.chars().next().unwrap().try_into();
             print!("\r");
-            if let Some(value) = dir {
+            if let Ok(value) = dir {
                 game.make_move(value);
             }
         }

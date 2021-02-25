@@ -1,5 +1,5 @@
 /* lib.rs -- lib module.
-Copyright (C) 2020 fuggy
+Copyright (C) 2020-2021 fuggy
 
 This file is part of game-2048-engine.
 
@@ -22,7 +22,7 @@ mod cache;
 pub mod direction;
 pub mod engine;
 pub mod game;
-pub mod input;
+pub mod getopt;
 mod matrix;
 mod output;
 mod random;

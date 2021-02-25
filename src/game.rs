@@ -108,7 +108,7 @@ impl Game {
         self.board.empty_count()
     }
 
-    /// Count the number of empty cells
+    /// The value of the maximum cell
     pub fn max_cell(&self) -> u16 {
         self.board.max_cell()
     }

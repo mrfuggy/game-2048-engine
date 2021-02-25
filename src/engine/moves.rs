@@ -92,7 +92,7 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    pub fn new(board_id: u64) -> Self {
+    pub(super) fn new(board_id: u64) -> Self {
         let mut stat = Statistics {
             total_nodes: 1,
             cut_nodes: 0,
@@ -108,13 +108,13 @@ impl Statistics {
         }
     }
 
-    pub fn add(&mut self, other: &Statistics) {
+    pub(super) fn add(&mut self, other: &Statistics) {
         self.total_nodes += other.total_nodes;
         self.cut_nodes += other.cut_nodes;
         Statistics::merge_maps(&mut self.cache_hit, &other.cache_hit);
     }
 
-    pub fn print_cache_stat(&self) {
+    pub(super) fn print_cache_stat(&self) {
         let mut cache_stat_vec: Vec<u32> = self.cache_hit.iter().map(|(_k, v)| *v).collect();
         cache_stat_vec.sort_unstable();
         cache_stat_vec.reverse();

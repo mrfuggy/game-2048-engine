@@ -21,4 +21,4 @@ pub mod engine_config;
 pub mod engine_core;
 pub mod evaluation;
 pub mod moves;
-pub mod node;
+mod node;
